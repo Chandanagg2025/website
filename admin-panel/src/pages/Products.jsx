@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Trash2, Edit3, Package, Gift, Droplets, Wrench, X, Save, Search } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Plus, Trash2, Edit3, Package, Gift, Droplets, Wrench, X, Save, Search, Upload, Image as ImageIcon, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAdminData } from '../context/AdminDataContext';
 
 const Products = () => {
@@ -10,6 +10,11 @@ const Products = () => {
   const [search, setSearch] = useState('');
 
   const [form, setForm] = useState({ name: '', price: '', originalPrice: '', category: '', stock: '', image: '', sku: '' });
+  const [imageFileName, setImageFileName] = useState('');
+  const [imageError, setImageError] = useState('');
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef(null);
 
   const verticals = [
     { id: 'gifts', name: 'Gift Gallery', icon: Gift, data: gifts },
@@ -26,8 +31,85 @@ const Products = () => {
 
   const resetForm = () => {
     setForm({ name: '', price: '', originalPrice: '', category: '', stock: '', image: '', sku: '' });
+    setImageFileName('');
+    setImageError('');
+    setIsCompressing(false);
+    setDragActive(false);
     setShowAddForm(false);
     setEditingId(null);
+  };
+
+  // Process and compress image from user's system
+  const processImageFile = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX_DIM = 900;
+          let width = img.width;
+          let height = img.height;
+          if (width > MAX_DIM || height > MAX_DIM) {
+            if (width > height) {
+              height = Math.round((height * MAX_DIM) / width);
+              width = MAX_DIM;
+            } else {
+              width = Math.round((width * MAX_DIM) / height);
+              height = MAX_DIM;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        img.onerror = () => reject(new Error('Invalid image file'));
+        img.src = event.target.result;
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileSelect = async (file) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setImageError('Please select a valid image file (PNG, JPG, WEBP, etc.)');
+      return;
+    }
+    setImageError('');
+    setIsCompressing(true);
+    try {
+      const compressedDataUrl = await processImageFile(file);
+      setForm(prev => ({ ...prev, image: compressedDataUrl }));
+      setImageFileName(file.name);
+    } catch (err) {
+      console.error(err);
+      setImageError('Failed to process image. Please try another image.');
+    } finally {
+      setIsCompressing(false);
+    }
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileSelect(e.dataTransfer.files[0]);
+    }
   };
 
   const handleAdd = (e) => {
@@ -57,6 +139,8 @@ const Products = () => {
       image: product.image || '',
       sku: product.sku || '',
     });
+    setImageFileName(product.image ? 'Current Image' : '');
+    setImageError('');
     setShowAddForm(true);
   };
 
@@ -155,8 +239,160 @@ const Products = () => {
               <input className="form-input" value={form.sku} onChange={e => setForm({ ...form, sku: e.target.value })} placeholder="SP-GFT-001" />
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
-              <label className="form-label">Image URL</label>
-              <input className="form-input" value={form.image} onChange={e => setForm({ ...form, image: e.target.value })} placeholder="https://..." />
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <ImageIcon size={15} color="#34d399" /> Product Image (Upload from Computer)
+                </span>
+                {form.image && (
+                  <span style={{ fontSize: '0.75rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <CheckCircle2 size={13} /> Image Ready
+                  </span>
+                )}
+              </label>
+
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/jpg,image/svg+xml"
+                style={{ display: 'none' }}
+                onChange={e => {
+                  if (e.target.files && e.target.files[0]) {
+                    handleFileSelect(e.target.files[0]);
+                  }
+                }}
+              />
+
+              {form.image ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1.25rem',
+                    padding: '1rem',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(16, 185, 129, 0.35)',
+                    flexWrap: 'wrap'
+                  }}
+                >
+                  <div style={{ position: 'relative' }}>
+                    <img
+                      src={form.image}
+                      alt="Product preview"
+                      style={{
+                        width: '84px',
+                        height: '84px',
+                        borderRadius: 'var(--radius-sm)',
+                        objectFit: 'cover',
+                        border: '2px solid rgba(16, 185, 129, 0.5)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ flex: 1, minWidth: '200px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                      <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                        {imageFileName || 'Selected Product Image'}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                      Loaded from your device &amp; optimized for catalog display
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="btn-secondary btn-sm"
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem' }}
+                      >
+                        <Upload size={13} /> Change Image
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForm(prev => ({ ...prev, image: '' }));
+                          setImageFileName('');
+                          if (fileInputRef.current) fileInputRef.current.value = '';
+                        }}
+                        className="btn-danger btn-sm"
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem' }}
+                      >
+                        <Trash2 size={13} /> Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    border: `2px dashed ${dragActive ? '#34d399' : 'rgba(255, 255, 255, 0.15)'}`,
+                    borderRadius: 'var(--radius-md)',
+                    padding: '1.75rem 1rem',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    background: dragActive ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.6rem'
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '50%',
+                      background: 'rgba(16, 185, 129, 0.12)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#34d399',
+                      border: '1px solid rgba(16, 185, 129, 0.3)'
+                    }}
+                  >
+                    <Upload size={20} />
+                  </div>
+
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.2rem' }}>
+                      {isCompressing ? 'Processing Image...' : 'Click to upload or drag & drop from your system'}
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                      Supports PNG, JPG, JPEG, WEBP from your local computer
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn-outline btn-sm"
+                    style={{
+                      marginTop: '0.25rem',
+                      borderColor: 'rgba(16, 185, 129, 0.4)',
+                      color: '#6ee7b7',
+                      pointerEvents: 'none'
+                    }}
+                  >
+                    Browse Files
+                  </button>
+                </div>
+              )}
+
+              {imageError && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#ef4444', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                  <AlertCircle size={14} />
+                  <span>{imageError}</span>
+                </div>
+              )}
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
               <button type="submit" className="btn-primary" style={{ width: '100%' }}>
