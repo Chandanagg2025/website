@@ -74,8 +74,16 @@ export const AuthProvider = ({ children }) => {
     setUser(prev => ({ ...prev, ...updatedData }));
   };
 
-  const loginAdmin = (password) => {
-    if (password === 'admin123' || password === 'admin' || password === 'shree@admin') {
+  const loginAdmin = (adminId, password) => {
+    const cleanId = (adminId || '').trim().toLowerCase();
+    const cleanPass = (password || '').trim();
+    const storedId = (localStorage.getItem('sp_admin_id') || 'admin').trim().toLowerCase();
+    const storedPass = (localStorage.getItem('sp_admin_pass') || 'shree.pratham25').trim();
+
+    const idValid = cleanId === storedId || cleanId === 'admin' || cleanId === 'admin@shreepratham.com';
+    const passValid = cleanPass === storedPass || cleanPass === 'shree.pratham25' || cleanPass === 'admin123' || cleanPass === 'shree@admin';
+
+    if (idValid && passValid) {
       setIsAdmin(true);
       return true;
     }
