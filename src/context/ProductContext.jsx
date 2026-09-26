@@ -23,22 +23,29 @@ import {
   generatePrintableShippingLabelHtml
 } from '../services/shiprocketService';
 
+import {
+  isFirebaseConfigured,
+  subscribeToCatalog,
+  sendOrderToCloud,
+  sendInquiryToCloud
+} from '../services/firebase';
+
 const ProductContext = createContext();
 
 export const ProductProvider = ({ children }) => {
   // 1. Catalog States
   const [giftProducts, setGiftProducts] = useState(() => {
-    const saved = localStorage.getItem('sp_gift_products');
+    const saved = localStorage.getItem('sp_gift_products') || localStorage.getItem('admin_gifts');
     return saved ? JSON.parse(saved) : initialGiftProducts;
   });
 
   const [waterProducts, setWaterProducts] = useState(() => {
-    const saved = localStorage.getItem('sp_water_products');
+    const saved = localStorage.getItem('sp_water_products') || localStorage.getItem('admin_water');
     return saved ? JSON.parse(saved) : initialWaterProducts;
   });
 
   const [appliances, setAppliances] = useState(() => {
-    const saved = localStorage.getItem('sp_appliances');
+    const saved = localStorage.getItem('sp_appliances') || localStorage.getItem('admin_appliances');
     return saved ? JSON.parse(saved) : initialAppliances;
   });
 
@@ -147,6 +154,35 @@ export const ProductProvider = ({ children }) => {
   const hideToast = () => {
     setToast(prev => ({ ...prev, visible: false }));
   };
+
+  // Real-time Cloud Catalog Sync from Firebase (Cross-Domain)
+  useEffect(() => {
+    if (!isFirebaseConfigured()) return;
+
+    const unsubGifts = subscribeToCatalog('gifts', (cloudGifts) => {
+      if (Array.isArray(cloudGifts) && cloudGifts.length > 0) {
+        setGiftProducts(cloudGifts);
+      }
+    });
+
+    const unsubWater = subscribeToCatalog('water', (cloudWater) => {
+      if (Array.isArray(cloudWater) && cloudWater.length > 0) {
+        setWaterProducts(cloudWater);
+      }
+    });
+
+    const unsubApps = subscribeToCatalog('appliances', (cloudApps) => {
+      if (Array.isArray(cloudApps) && cloudApps.length > 0) {
+        setAppliances(cloudApps);
+      }
+    });
+
+    return () => {
+      unsubGifts();
+      unsubWater();
+      unsubApps();
+    };
+  }, []);
 
   // Sync to LocalStorage
   useEffect(() => {
@@ -392,6 +428,9 @@ export const ProductProvider = ({ children }) => {
     // Auto-dispatch GST Tax Invoice to customer email
     sendGSTInvoiceEmail(newOrder);
 
+    // Sync order to Cloud Firestore so Admin sees it immediately
+    sendOrderToCloud(newOrder);
+
     setOrders(prev => [newOrder, ...prev]);
     clearCart();
     showToast(`Order ${newOrderId} placed with Shiprocket AWB: ${initialAwb}!`, 'success');
@@ -594,6 +633,7 @@ export const ProductProvider = ({ children }) => {
       status: 'Pending'
     };
     setInquiries(prev => [newInquiry, ...prev]);
+    sendInquiryToCloud(newInquiry);
     showToast(`Thank you ${inquiryData.name.split(' ')[0]}! Inquiry #${inqId} received. We will contact you shortly.`, 'success');
     return newInquiry;
   };

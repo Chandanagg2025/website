@@ -1,4 +1,12 @@
-import { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import {
+  isFirebaseConfigured,
+  syncCatalogToCloud,
+  subscribeToCatalog,
+  fetchCatalogFromCloud,
+  saveFirebaseConfig,
+  reinitDb
+} from '../services/firebase';
 
 const AdminDataContext = createContext();
 
@@ -97,19 +105,51 @@ const seedBulkQuotes = [
 ];
 
 export const AdminDataProvider = ({ children }) => {
+  // Toast
+  const [toast, setToast] = useState({ message: '', type: 'success', visible: false });
+  const showToast = useCallback((message, type = 'success') => {
+    setToast({ message, type, visible: true });
+    setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 4000);
+  }, []);
+
   // Products
   const [gifts, setGifts] = useState(() => {
-    const s = localStorage.getItem('admin_gifts');
+    const s = localStorage.getItem('sp_gift_products') || localStorage.getItem('admin_gifts');
     return s ? JSON.parse(s) : seedGifts;
   });
   const [water, setWater] = useState(() => {
-    const s = localStorage.getItem('admin_water');
+    const s = localStorage.getItem('sp_water_products') || localStorage.getItem('admin_water');
     return s ? JSON.parse(s) : seedWater;
   });
   const [appliances, setAppliances] = useState(() => {
-    const s = localStorage.getItem('admin_appliances');
+    const s = localStorage.getItem('sp_appliances') || localStorage.getItem('admin_appliances');
     return s ? JSON.parse(s) : seedAppliances;
   });
+
+  // Cloud status
+  const [cloudConnected, setCloudConnected] = useState(isFirebaseConfigured());
+
+  // Listen to Firestore real-time if configured
+  useEffect(() => {
+    if (!isFirebaseConfigured()) return;
+    setCloudConnected(true);
+
+    const unsubGifts = subscribeToCatalog('gifts', (cloudData) => {
+      if (Array.isArray(cloudData) && cloudData.length > 0) setGifts(cloudData);
+    });
+    const unsubWater = subscribeToCatalog('water', (cloudData) => {
+      if (Array.isArray(cloudData) && cloudData.length > 0) setWater(cloudData);
+    });
+    const unsubApps = subscribeToCatalog('appliances', (cloudData) => {
+      if (Array.isArray(cloudData) && cloudData.length > 0) setAppliances(cloudData);
+    });
+
+    return () => {
+      unsubGifts();
+      unsubWater();
+      unsubApps();
+    };
+  }, []);
 
   // Orders
   const [orders, setOrders] = useState(() => {
@@ -160,10 +200,22 @@ export const AdminDataProvider = ({ children }) => {
     };
   });
 
-  // Persist
-  useEffect(() => { localStorage.setItem('admin_gifts', JSON.stringify(gifts)); }, [gifts]);
-  useEffect(() => { localStorage.setItem('admin_water', JSON.stringify(water)); }, [water]);
-  useEffect(() => { localStorage.setItem('admin_appliances', JSON.stringify(appliances)); }, [appliances]);
+  // Persist locally under both keys for maximum compatibility
+  useEffect(() => {
+    localStorage.setItem('sp_gift_products', JSON.stringify(gifts));
+    localStorage.setItem('admin_gifts', JSON.stringify(gifts));
+  }, [gifts]);
+
+  useEffect(() => {
+    localStorage.setItem('sp_water_products', JSON.stringify(water));
+    localStorage.setItem('admin_water', JSON.stringify(water));
+  }, [water]);
+
+  useEffect(() => {
+    localStorage.setItem('sp_appliances', JSON.stringify(appliances));
+    localStorage.setItem('admin_appliances', JSON.stringify(appliances));
+  }, [appliances]);
+
   useEffect(() => { localStorage.setItem('admin_orders', JSON.stringify(orders)); }, [orders]);
   useEffect(() => { localStorage.setItem('admin_payments', JSON.stringify(payments)); }, [payments]);
   useEffect(() => { localStorage.setItem('admin_queries', JSON.stringify(queries)); }, [queries]);
@@ -172,35 +224,101 @@ export const AdminDataProvider = ({ children }) => {
   useEffect(() => { localStorage.setItem('admin_quotes', JSON.stringify(bulkQuotes)); }, [bulkQuotes]);
   useEffect(() => { localStorage.setItem('admin_settings', JSON.stringify(settings)); }, [settings]);
 
-  // Toast
-  const [toast, setToast] = useState({ message: '', type: 'success', visible: false });
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type, visible: true });
-    setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 4000);
+  // Sync to cloud helper
+  const syncToCloud = useCallback(async (vertical, newProducts) => {
+    if (isFirebaseConfigured()) {
+      try {
+        await syncCatalogToCloud(vertical, newProducts);
+      } catch (err) {
+        console.warn(`Could not sync ${vertical} to cloud:`, err);
+      }
+    }
+  }, []);
+
+  // Force sync all to cloud
+  const pushAllToCloud = async () => {
+    if (!isFirebaseConfigured()) {
+      showToast('Firebase not configured. Please paste your Firebase config in Settings.', 'error');
+      return false;
+    }
+    try {
+      showToast('Syncing all products to cloud...', 'info');
+      await syncCatalogToCloud('gifts', gifts);
+      await syncCatalogToCloud('water', water);
+      await syncCatalogToCloud('appliances', appliances);
+      showToast('All products successfully synced to cloud and live on website!', 'success');
+      return true;
+    } catch (e) {
+      showToast('Sync failed: ' + (e.message || 'Check connection / Firestore rules'), 'error');
+      return false;
+    }
+  };
+
+  // Connect Firebase from Settings
+  const configureFirebase = (configObj) => {
+    const ok = saveFirebaseConfig(configObj);
+    if (ok) {
+      reinitDb();
+      setCloudConnected(true);
+      showToast('Firebase Cloud Database connected successfully!');
+      return true;
+    }
+    showToast('Invalid Firebase configuration object.', 'error');
+    return false;
   };
 
   // Product operations
   const addProduct = (vertical, product) => {
     const newProduct = { ...product, id: `${vertical}-${Date.now()}`, inStock: (product.stock || 0) > 0 };
-    if (vertical === 'gifts') setGifts(prev => [newProduct, ...prev]);
-    else if (vertical === 'water') setWater(prev => [newProduct, ...prev]);
-    else if (vertical === 'appliances') setAppliances(prev => [newProduct, ...prev]);
-    showToast(`Product "${product.name}" added to ${vertical}!`);
+    if (vertical === 'gifts') {
+      const updated = [newProduct, ...gifts];
+      setGifts(updated);
+      syncToCloud('gifts', updated);
+    } else if (vertical === 'water') {
+      const updated = [newProduct, ...water];
+      setWater(updated);
+      syncToCloud('water', updated);
+    } else if (vertical === 'appliances') {
+      const updated = [newProduct, ...appliances];
+      setAppliances(updated);
+      syncToCloud('appliances', updated);
+    }
+    showToast(`Product "${product.name}" added!`);
   };
 
   const updateProduct = (vertical, id, updates) => {
     const updater = prev => prev.map(p => p.id === id ? { ...p, ...updates, inStock: (updates.stock ?? p.stock) > 0 } : p);
-    if (vertical === 'gifts') setGifts(updater);
-    else if (vertical === 'water') setWater(updater);
-    else if (vertical === 'appliances') setAppliances(updater);
+    if (vertical === 'gifts') {
+      const updated = updater(gifts);
+      setGifts(updated);
+      syncToCloud('gifts', updated);
+    } else if (vertical === 'water') {
+      const updated = updater(water);
+      setWater(updated);
+      syncToCloud('water', updated);
+    } else if (vertical === 'appliances') {
+      const updated = updater(appliances);
+      setAppliances(updated);
+      syncToCloud('appliances', updated);
+    }
     showToast('Product updated!');
   };
 
   const deleteProduct = (vertical, id) => {
     const filter = prev => prev.filter(p => p.id !== id);
-    if (vertical === 'gifts') setGifts(filter);
-    else if (vertical === 'water') setWater(filter);
-    else if (vertical === 'appliances') setAppliances(filter);
+    if (vertical === 'gifts') {
+      const updated = filter(gifts);
+      setGifts(updated);
+      syncToCloud('gifts', updated);
+    } else if (vertical === 'water') {
+      const updated = filter(water);
+      setWater(updated);
+      syncToCloud('water', updated);
+    } else if (vertical === 'appliances') {
+      const updated = filter(appliances);
+      setAppliances(updated);
+      syncToCloud('appliances', updated);
+    }
     showToast('Product deleted!', 'info');
   };
 
@@ -290,6 +408,9 @@ export const AdminDataProvider = ({ children }) => {
       settings, updateSettings,
       toast, showToast,
       getKPIs,
+      cloudConnected,
+      pushAllToCloud,
+      configureFirebase
     }}>
       {children}
     </AdminDataContext.Provider>
