@@ -253,7 +253,7 @@ const Layout = () => {
           </Link>
 
           {/* Desktop Nav Links */}
-          <nav style={{ display: 'none', lgDisplay: 'flex', alignItems: 'center', gap: '1rem' }} className="desktop-nav">
+          <nav style={{ display: 'none', lgDisplay: 'flex', alignItems: 'center', gap: '0.5rem' }} className="desktop-nav">
             {navLinks.map(link => {
               const Icon = link.icon;
               return (
@@ -266,7 +266,7 @@ const Layout = () => {
                     gap: '0.5rem',
                     padding: '0.7rem 1.1rem',
                     borderRadius: 'var(--radius-md)',
-                    fontSize: '1.2rem',
+                    fontSize: '1rem',
                     fontWeight: isActive ? 700 : 500,
                     color: isActive ? 'var(--accent-gold-light)' : 'var(--text-main)',
                     background: isActive ? 'rgba(245, 158, 11, 0.12)' : 'transparent',
