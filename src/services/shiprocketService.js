@@ -506,7 +506,7 @@ export const generatePrintableShippingLabelHtml = (order, shiprocketDetails) => 
         <strong>SHREE PRATHAM CONGLOMERATE</strong><br>
         Central Hub: 402, Hill Road, Bandra West<br>
         Mumbai, Maharashtra - 400050<br>
-        GSTIN: 27AABCS1429B1Z8<br>
+        GSTIN: 07ELQPA7054H1ZW<br>
         Support: +91 (022) 6982-5000
       </div>
     </div>

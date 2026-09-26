@@ -12,6 +12,7 @@ import {
   seedTickets
 } from '../data/mockData';
 import { sendOrderConfirmationEmail, OFFICIAL_SALES_EMAIL } from '../services/emailService';
+import { sendGSTInvoiceEmail, generateGSTInvoiceHtml, getInvoiceByOrderId } from '../services/gstInvoiceService';
 import { getRazorpayKey, getMerchantUpiId, RAZORPAY_CONFIG } from '../services/razorpayService';
 import {
   getShiprocketConfig,
@@ -385,8 +386,11 @@ export const ProductProvider = ({ children }) => {
       ]
     };
 
-    // Auto-dispatch confirmation email from sales@shreepratham.com
+    // Auto-dispatch confirmation email from contact@shreepratham.com
     sendOrderConfirmationEmail(newOrder);
+
+    // Auto-dispatch GST Tax Invoice to customer email
+    sendGSTInvoiceEmail(newOrder);
 
     setOrders(prev => [newOrder, ...prev]);
     clearCart();
@@ -672,6 +676,16 @@ export const ProductProvider = ({ children }) => {
       merchantUpiId,
       razorpayConfig: RAZORPAY_CONFIG,
       officialSalesEmail: OFFICIAL_SALES_EMAIL,
+
+      // GST Invoice
+      generateGSTInvoiceHtml,
+      getInvoiceByOrderId,
+      resendGSTInvoice: async (orderId) => {
+        const targetOrder = orders.find(o => o.id === orderId);
+        if (!targetOrder) return false;
+        await sendGSTInvoiceEmail(targetOrder);
+        return true;
+      },
 
       // Subscriptions
       subscriptions,

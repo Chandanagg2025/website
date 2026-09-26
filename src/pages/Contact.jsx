@@ -102,7 +102,7 @@ const Contact = () => {
               </div>
               <div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-subtle)', textTransform: 'uppercase' }}>Central Telephone</div>
-                <div style={{ color: '#fff', fontWeight: 600 }}>+91 (022) 6982-5000 / +91 98765 43210</div>
+                <div style={{ color: '#fff', fontWeight: 600 }}>+91 (022) 6982-5000</div>
               </div>
             </div>
 
@@ -122,8 +122,8 @@ const Contact = () => {
               </div>
               <div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-subtle)', textTransform: 'uppercase' }}>Official Corporate & Sales Desks</div>
-                <div style={{ color: '#fff', fontWeight: 600 }}>sales@shreepratham.com <span className="badge-gold" style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem', marginLeft: '0.4rem' }}>Orders & Fulfillment</span></div>
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.15rem' }}>contact@shreepratham.com (General Inquiries)</div>
+                <div style={{ color: '#fff', fontWeight: 600 }}>contact@shreepratham.com <span className="badge-gold" style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem', marginLeft: '0.4rem' }}>Orders & Fulfillment</span></div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.15rem' }}>contact@shreepratham.com</div>
               </div>
             </div>
 
@@ -150,7 +150,7 @@ const Contact = () => {
 
           <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1.5rem', display: 'flex', gap: '0.75rem' }}>
             <a
-              href="https://wa.me/919876543210?text=Hello%20Shree%20Pratham,%20I%20would%20like%20to%20connect%20with%20your%20team."
+              href="https://wa.me/918851912882?text=Hello%20Shree%20Pratham,%20I%20would%20like%20to%20connect%20with%20your%20team."
               target="_blank"
               rel="noreferrer"
               style={{
@@ -207,7 +207,7 @@ const Contact = () => {
             <form onSubmit={handleSubmit}>
               <h3 style={{ fontSize: '1.4rem', marginBottom: '1.25rem' }}>Send Us a Message</h3>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div className="form-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label className="form-label">Full Name *</label>
                   <input
@@ -225,14 +225,14 @@ const Contact = () => {
                     type="tel"
                     required
                     className="form-input"
-                    placeholder="+91 98765 43210"
+                    placeholder="+91 98XXX XXXXX"
                     value={formData.phone}
                     onChange={e => setFormData({ ...formData, phone: e.target.value })}
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div className="form-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label className="form-label">Email Address *</label>
                   <input

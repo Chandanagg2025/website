@@ -10,8 +10,6 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Account from './pages/Account';
 import CustomerLogin from './pages/CustomerLogin';
-import AdminLogin from './pages/AdminLogin';
-import Admin from './pages/Admin';
 import Contact from './pages/Contact';
 
 function App() {
@@ -49,10 +47,6 @@ function App() {
         <Route path="register" element={<CustomerLogin />} />
         <Route path="contact" element={<Contact />} />
 
-        {/* Admin Portal */}
-        <Route path="admin/login" element={<AdminLogin />} />
-        <Route path="admin" element={<Admin />} />
-
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
@@ -61,3 +55,4 @@ function App() {
 }
 
 export default App;
+

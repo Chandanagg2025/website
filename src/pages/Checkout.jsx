@@ -19,6 +19,7 @@ import {
   generateOrderEmailHtml,
   generateMailtoLink
 } from '../services/emailService';
+import { generateGSTInvoiceHtml } from '../services/gstInvoiceService';
 
 const PAYMENT_METHODS = [
   { id: 'upi', name: 'Instant UPI / QR Code (Google Pay, PhonePe, Paytm, BHIM)', icon: QrCode, tag: 'Zero Surcharge • Official Razorpay VPA' },
@@ -55,6 +56,7 @@ const Checkout = () => {
 
   // Email confirmation states
   const [showEmailPreviewModal, setShowEmailPreviewModal] = useState(false);
+  const [showGSTInvoiceModal, setShowGSTInvoiceModal] = useState(false);
   const [isResendingEmail, setIsResendingEmail] = useState(false);
 
   const [cardNumber, setCardNumber] = useState('4532 •••• •••• 8829');
@@ -193,7 +195,7 @@ const Checkout = () => {
     setConfirmedOrder(newOrder);
   };
 
-  // Re-trigger confirmation email dispatch from sales@shreepratham.com
+  // Re-trigger confirmation email dispatch from contact@shreepratham.com
   const handleResendEmail = async () => {
     if (!confirmedOrder) return;
     setIsResendingEmail(true);
@@ -298,7 +300,7 @@ const Checkout = () => {
             </div>
           )}
 
-          {/* Email Confirmation Notice Banner (sales@shreepratham.com) */}
+          {/* Email Confirmation Notice Banner (contact@shreepratham.com) */}
           <div className="glass-card" style={{
             padding: '1.5rem 2rem',
             marginBottom: '1.75rem',
@@ -391,7 +393,7 @@ const Checkout = () => {
                     SHREE PRATHAM TAX INVOICE
                   </div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    GSTIN: 27AABCS1429B1Z8 • Authorized Enterprise Center • Sales: {OFFICIAL_SALES_EMAIL}
+                    GSTIN: 07ELQPA7054H1ZW • Authorized Enterprise Center • Sales: {OFFICIAL_SALES_EMAIL}
                   </div>
                 </div>
               </div>
@@ -481,20 +483,33 @@ const Checkout = () => {
 
             <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button
-                onClick={() => window.print()}
+                onClick={() => setShowGSTInvoiceModal(true)}
+                className="btn-gold btn-sm"
+                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+              >
+                <Eye size={15} /> View GST Invoice
+              </button>
+              <button
+                onClick={() => {
+                  const invoiceHtml = generateGSTInvoiceHtml(confirmedOrder);
+                  const printWin = window.open('', '_blank');
+                  printWin.document.write(invoiceHtml);
+                  printWin.document.close();
+                  setTimeout(() => printWin.print(), 600);
+                }}
                 className="btn-secondary btn-sm"
                 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
               >
-                <Printer size={15} /> Print Invoice PDF
+                <Printer size={15} /> Download GST Invoice PDF
               </button>
               <button
                 onClick={() => setShowEmailPreviewModal(true)}
                 className="btn-outline btn-sm"
                 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
               >
-                <Mail size={15} /> View Email Sent
+                <Mail size={15} /> View Confirmation Email
               </button>
-              <Link to="/account" className="btn-gold btn-sm">
+              <Link to="/account" className="btn-outline btn-sm">
                 View in Customer Portal
               </Link>
             </div>
@@ -566,6 +581,83 @@ const Checkout = () => {
                   className="btn-gold btn-sm"
                 >
                   Close Preview
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: GST Tax Invoice Preview */}
+        {showGSTInvoiceModal && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.88)',
+            backdropFilter: 'blur(10px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1.5rem'
+          }}>
+            <div className="glass-card" style={{
+              width: '100%',
+              maxWidth: '950px',
+              maxHeight: '92vh',
+              display: 'flex',
+              flexDirection: 'column',
+              background: '#0e1626',
+              border: '1px solid rgba(8, 145, 178, 0.6)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.8)'
+            }}>
+              {/* Header */}
+              <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontWeight: 800, color: '#22d3ee', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <ShieldCheck size={18} /> GST Tax Invoice
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    GSTIN: 07ELQPA7054H1ZW • Order #{confirmedOrder.id} • Sent to: <strong>{confirmedOrder.customer?.email}</strong>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowGSTInvoiceModal(false)}
+                  style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Invoice Content Frame */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', background: '#f1f5f9' }}>
+                <iframe
+                  title="GST Tax Invoice Preview"
+                  srcDoc={generateGSTInvoiceHtml(confirmedOrder)}
+                  style={{ width: '100%', minHeight: '650px', border: 'none', background: '#ffffff', borderRadius: '4px' }}
+                />
+              </div>
+
+              {/* Modal Footer */}
+              <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <button
+                  onClick={() => {
+                    const invoiceHtml = generateGSTInvoiceHtml(confirmedOrder);
+                    const printWin = window.open('', '_blank');
+                    printWin.document.write(invoiceHtml);
+                    printWin.document.close();
+                    setTimeout(() => printWin.print(), 600);
+                  }}
+                  className="btn-secondary btn-sm"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  <Printer size={14} /> Print / Save as PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowGSTInvoiceModal(false)}
+                  className="btn-gold btn-sm"
+                >
+                  Close Invoice
                 </button>
               </div>
             </div>

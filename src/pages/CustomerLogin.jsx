@@ -165,7 +165,7 @@ const CustomerLogin = () => {
               <input
                 type="tel"
                 required
-                placeholder="+91 98201 XXXXX"
+                placeholder="+91 88519 XXXXX"
                 className="form-input"
                 value={phone}
                 onChange={e => setPhone(e.target.value)}

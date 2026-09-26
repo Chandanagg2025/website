@@ -212,8 +212,8 @@ const Gifts = () => {
           ) : (
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))',
-              gap: '2rem'
+              gridTemplateColumns: 'repeat(auto-fill, minmax(min(310px, 100%), 1fr))',
+              gap: '1.5rem'
             }}>
               {filteredProducts.map(product => {
                 const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);

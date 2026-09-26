@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
-  Menu, X, ShoppingCart, User, ShieldCheck, Gift, Droplets,
+  Menu, X, ShoppingCart, User, Gift, Droplets,
   Wrench, TrendingUp, Monitor, ChevronRight, Phone, Mail,
-  Sparkles, Maximize2, Minimize2, PhoneCall
+  Sparkles, PhoneCall
 } from 'lucide-react';
 import { useProducts } from '../context/ProductContext';
 import { useAuth } from '../context/AuthContext';
@@ -15,26 +15,11 @@ const Layout = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [contactModalOpen, setContactModalOpen] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const location = useLocation();
 
   const { getCartItemCount } = useProducts();
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const cartCount = getCartItemCount();
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.warn('Error attempting to enable fullscreen mode:', err);
-      });
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().catch((err) => {
-          console.warn('Error attempting to exit fullscreen mode:', err);
-        });
-      }
-    }
-  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,36 +29,11 @@ const Layout = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Listen to fullscreen changes
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
-
   // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
     window.scrollTo(0, 0);
   }, [location.pathname]);
-
-  // Support pressing 'F' or 'F11' key to toggle fullscreen
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Don't trigger if user is typing in an input, textarea or select
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
-        return;
-      }
-      if (e.key === 'f' || e.key === 'F') {
-        e.preventDefault();
-        toggleFullscreen();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   const navLinks = [
     { name: 'Home', path: '/', icon: null },
@@ -85,7 +45,7 @@ const Layout = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500vh', width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
       <Toast />
 
       {/* Contact Us Popup Modal */}
@@ -98,7 +58,7 @@ const Layout = () => {
       <WhatsAppButton />
 
       {/* Top Ticker Bar */}
-      <div style={{
+      <div className="ticker-bar" style={{
         background: 'linear-gradient(90deg, #090d16 0%, #17223b 50%, #090d16 100%)',
         borderBottom: '1px solid var(--border-gold)',
         padding: '0.45rem 1rem',
@@ -106,7 +66,7 @@ const Layout = () => {
         color: 'var(--text-muted)',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         zIndex: 50,
         width: '100%'
       }}>
@@ -120,7 +80,7 @@ const Layout = () => {
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', fontSize: '0.78rem' }}>
+          <div className="ticker-actions" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', fontSize: '0.78rem' }}>
             <button
               onClick={() => setContactModalOpen(true)}
               style={{
@@ -156,41 +116,6 @@ const Layout = () => {
             >
               <Mail size={12} color="var(--accent-gold)" /> contact@shreepratham.com
             </button>
-
-            <button
-              onClick={toggleFullscreen}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.35rem',
-                background: isFullscreen ? 'rgba(245, 158, 11, 0.15)' : 'transparent',
-                border: isFullscreen ? '1px solid var(--accent-gold)' : 'none',
-                borderRadius: 'var(--radius-sm)',
-                padding: '0.2rem 0.5rem',
-                color: isFullscreen ? 'var(--accent-gold-light)' : 'var(--text-muted)',
-                cursor: 'pointer',
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                transition: 'var(--transition)'
-              }}
-              title={isFullscreen ? 'Exit Full Screen Mode (Press F or Esc)' : 'Expand to Full Screen Mode (Press F)'}
-            >
-              {isFullscreen ? <Minimize2 size={12} color="var(--accent-gold)" /> : <Maximize2 size={12} color="var(--accent-gold)" />}
-              <span>{isFullscreen ? 'Exit Full Screen' : 'Full Screen'}</span>
-            </button>
-
-            <Link
-              to={isAdmin ? '/admin' : '/admin/login'}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '1rem',
-                color: isAdmin ? '#6ee7b7' : 'var(--accent-gold-light)',
-                fontWeight: 600
-              }}
-            >
-              <ShieldCheck size={13} /> {isAdmin ? 'Admin Console' : 'Admin Portal'}
-            </Link>
           </div>
         </div>
       </div>
@@ -233,7 +158,7 @@ const Layout = () => {
                 }}
               />
             </div>
-            <div>
+            <div className="brand-text">
               <div style={{
                 fontFamily: "'Outfit', sans-serif",
                 fontWeight: 800,
@@ -246,14 +171,14 @@ const Layout = () => {
               }}>
                 SHREE PRATHAM
               </div>
-              <div style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.18em', color: 'var(--text-muted)', fontWeight: 600 }}>
+              <div className="brand-subtitle" style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.18em', color: 'var(--text-muted)', fontWeight: 600 }}>
                 Enterprise & Lifestyle Multi-Vertical
               </div>
             </div>
           </Link>
 
           {/* Desktop Nav Links */}
-          <nav style={{ display: 'none', lgDisplay: 'flex', alignItems: 'center', gap: '1rem' }} className="desktop-nav">
+          <nav style={{ display: 'none', alignItems: 'center', gap: '0.5rem' }} className="desktop-nav">
             {navLinks.map(link => {
               const Icon = link.icon;
               return (
@@ -263,18 +188,19 @@ const Layout = () => {
                   style={({ isActive }) => ({
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.7rem 1.1rem',
+                    gap: '0.4rem',
+                    padding: '0.6rem 0.9rem',
                     borderRadius: 'var(--radius-md)',
-                    fontSize: '1.2rem',
+                    fontSize: '0.88rem',
                     fontWeight: isActive ? 700 : 500,
                     color: isActive ? 'var(--accent-gold-light)' : 'var(--text-main)',
                     background: isActive ? 'rgba(245, 158, 11, 0.12)' : 'transparent',
                     border: isActive ? '1px solid var(--border-gold)' : '1px solid transparent',
-                    transition: 'var(--transition)'
+                    transition: 'var(--transition)',
+                    whiteSpace: 'nowrap'
                   })}
                 >
-                  {Icon && <Icon size={17} />}
+                  {Icon && <Icon size={15} />}
                   {link.name}
                 </NavLink>
               );
@@ -282,7 +208,7 @@ const Layout = () => {
           </nav>
 
           {/* Right Action Icons & Controls */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             {/* Contact Us Button */}
             <button
               onClick={() => setContactModalOpen(true)}
@@ -298,34 +224,7 @@ const Layout = () => {
               }}
               title="Open Contact Form & Request Callback"
             >
-              <PhoneCall size={14} /> Contact Us
-            </button>
-
-            {/* Fullscreen Mode Toggle */}
-            <button
-              onClick={toggleFullscreen}
-              className="fullscreen-nav-btn"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                padding: '0.52rem 0.85rem',
-                height: '40px',
-                borderRadius: 'var(--radius-md)',
-                background: isFullscreen ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.25))' : 'rgba(255, 255, 255, 0.05)',
-                border: isFullscreen ? '1px solid var(--accent-gold)' : '1px solid var(--border-subtle)',
-                color: isFullscreen ? 'var(--accent-gold-light)' : '#fff',
-                cursor: 'pointer',
-                fontSize: '0.84rem',
-                fontWeight: 600,
-                boxShadow: isFullscreen ? 'var(--gold-glow)' : 'none',
-                transition: 'var(--transition)'
-              }}
-              title={isFullscreen ? 'Exit Full Screen (Press F or ESC)' : 'Enter Full Screen Mode (Press F)'}
-              aria-label="Toggle Fullscreen"
-            >
-              {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-              <span className="fs-btn-text">{isFullscreen ? 'Exit Fullscreen' : 'Full Screen'}</span>
+              <PhoneCall size={14} /> <span className="contact-btn-text">Contact Us</span>
             </button>
 
             {/* Cart Link */}
@@ -417,7 +316,9 @@ const Layout = () => {
             padding: '1.25rem 1.5rem',
             display: 'flex',
             flexDirection: 'column',
-            gap: '0.6rem'
+            gap: '0.5rem',
+            maxHeight: '70vh',
+            overflowY: 'auto'
           }}>
             {/* Quick Contact Button inside mobile menu */}
             <button
@@ -426,7 +327,7 @@ const Layout = () => {
                 setContactModalOpen(true);
               }}
               className="btn-gold"
-              style={{ width: '100%', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}
+              style={{ width: '100%', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem', padding: '0.75rem' }}
             >
               <PhoneCall size={17} /> Contact Us & Request Callback
             </button>
@@ -442,12 +343,13 @@ const Layout = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '0.8rem 1rem',
+                    padding: '0.75rem 1rem',
                     borderRadius: 'var(--radius-md)',
                     color: isActive ? 'var(--accent-gold-light)' : '#fff',
                     background: isActive ? 'rgba(245, 158, 11, 0.12)' : 'rgba(255, 255, 255, 0.03)',
                     border: isActive ? '1px solid var(--border-gold)' : '1px solid transparent',
-                    fontWeight: 600
+                    fontWeight: 600,
+                    fontSize: '0.95rem'
                   })}
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
@@ -459,35 +361,26 @@ const Layout = () => {
               );
             })}
 
-            <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  toggleFullscreen();
-                }}
-                className="btn-secondary"
-                style={{ width: '100%', justifyContent: 'center', gap: '0.5rem' }}
-              >
-                {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-                {isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
-              </button>
-
-              <Link
-                to="/account"
-                onClick={() => setMobileMenuOpen(false)}
-                className="btn-outline"
-                style={{ width: '100%', justifyContent: 'center' }}
-              >
-                <User size={16} /> Customer Portal & Orders
-              </Link>
-              <Link
-                to={isAdmin ? '/admin' : '/admin/login'}
-                onClick={() => setMobileMenuOpen(false)}
-                className="btn-secondary"
-                style={{ width: '100%', justifyContent: 'center' }}
-              >
-                <ShieldCheck size={16} /> Admin Console
-              </Link>
+            <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {user ? (
+                <Link
+                  to="/account"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="btn-outline"
+                  style={{ width: '100%', justifyContent: 'center', padding: '0.7rem' }}
+                >
+                  <User size={16} /> My Account & Orders
+                </Link>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="btn-outline"
+                  style={{ width: '100%', justifyContent: 'center', padding: '0.7rem' }}
+                >
+                  <User size={16} /> Sign In / Register
+                </Link>
+              )}
             </div>
           </div>
         )}
@@ -509,14 +402,14 @@ const Layout = () => {
       }}>
         <div className="container">
           {/* Multi-Vertical Columns Grid */}
-          <div style={{
+          <div className="footer-grid" style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
             gap: '2.5rem',
             marginBottom: '3.5rem'
           }}>
             {/* Brand Column with Official Logo */}
-            <div style={{ gridColumn: 'span 2' }}>
+            <div className="footer-brand-col">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1.25rem' }}>
                 <div style={{
                   width: '50px',
@@ -593,7 +486,7 @@ const Layout = () => {
             </div>
 
             {/* Vertical 3: Industrial Appliances */}
-            <div>
+            <div className="footer-hide-mobile">
               <h4 style={{ fontSize: '1rem', color: 'var(--accent-gold-light)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <Wrench size={16} /> Industrial Appliances
               </h4>
@@ -607,7 +500,7 @@ const Layout = () => {
             </div>
 
             {/* Vertical 4 & 5: Digital & IT */}
-            <div>
+            <div className="footer-hide-mobile">
               <h4 style={{ fontSize: '1rem', color: 'var(--accent-gold-light)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <TrendingUp size={16} /> Digital & IT
               </h4>
@@ -647,7 +540,7 @@ const Layout = () => {
               <Link to="/cart" style={{ color: 'inherit' }}>Shopping Cart</Link>
               <Link to="/account" style={{ color: 'inherit' }}>Order Tracking</Link>
               <Link to="/login" style={{ color: 'inherit' }}>Customer Login</Link>
-              <Link to={isAdmin ? '/admin' : '/admin/login'} style={{ color: 'var(--accent-gold)' }}>Admin Panel</Link>
+              <Link to="/admin/login" style={{ color: 'inherit' }}>Admin Panel</Link>
             </div>
           </div>
         </div>
@@ -663,6 +556,11 @@ const Layout = () => {
             display: none !important;
           }
         }
+        @media (max-width: 1023px) {
+          .desktop-nav {
+            display: none !important;
+          }
+        }
         @media (max-width: 768px) {
           .ticker-tagline, .ticker-mail {
             display: none !important;
@@ -670,13 +568,32 @@ const Layout = () => {
           .user-btn {
             display: none !important;
           }
-          .fs-btn-text {
+          .brand-subtitle {
+            display: none !important;
+          }
+          .footer-brand-col {
+            grid-column: span 1 !important;
+          }
+          .footer-grid {
+            grid-template-columns: 1fr !important;
+            gap: 2rem !important;
+          }
+          .footer-hide-mobile {
             display: none !important;
           }
         }
         @media (max-width: 480px) {
           .nav-contact-btn {
+            padding: 0.45rem 0.6rem !important;
+          }
+          .contact-btn-text {
             display: none !important;
+          }
+          .ticker-bar {
+            padding: 0.35rem 0.5rem !important;
+          }
+          .ticker-actions {
+            gap: 0.5rem !important;
           }
         }
       `}</style>

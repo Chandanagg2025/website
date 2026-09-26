@@ -204,7 +204,7 @@ const ConsultationModal = ({ initialService, isOpen, onClose }) => {
                     className="form-input"
                     value={phone}
                     onChange={e => setPhone(e.target.value)}
-                    placeholder="+91 98201 XXXXX"
+                    placeholder="+91 98XXX XXXXX"
                   />
                 </div>
                 <div>

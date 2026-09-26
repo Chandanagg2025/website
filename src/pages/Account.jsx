@@ -285,7 +285,7 @@ const Account = () => {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                       <span style={{ color: '#6ee7b7', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                        <Mail size={13} /> Invoice sent from <strong>sales@shreepratham.com</strong>
+                        <Mail size={13} /> Invoice sent from <strong>contact@shreepratham.com</strong>
                       </span>
                       <button
                         onClick={() => resendOrderEmail(order.id)}

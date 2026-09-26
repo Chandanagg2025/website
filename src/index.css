@@ -433,3 +433,47 @@ input, textarea, select {
     padding: 0 1rem;
   }
 }
+
+/* Enhanced mobile responsive overrides */
+@media (max-width: 640px) {
+  .form-grid-2col {
+    grid-template-columns: 1fr !important;
+  }
+  .modal-content {
+    margin: 0.5rem;
+    max-height: 95vh;
+    border-radius: var(--radius-lg);
+  }
+  .toast-container {
+    bottom: 85px;
+    right: 12px;
+    left: 12px;
+  }
+  .toast-item {
+    max-width: 100%;
+  }
+  h1 {
+    word-break: break-word;
+  }
+}
+
+@media (max-width: 480px) {
+  .fullscreen-hero {
+    min-height: auto !important;
+    padding: 2rem 0 1.5rem 0 !important;
+  }
+  .btn-gold, .btn-outline, .btn-secondary {
+    padding: 0.7rem 1.2rem;
+    font-size: 0.88rem;
+  }
+  .glass-card, .glass-card-interactive {
+    border-radius: var(--radius-md);
+  }
+}
+
+/* Fix list styling */
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}

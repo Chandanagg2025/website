@@ -178,7 +178,7 @@ const ContactModal = ({ isOpen, onClose, initialVertical = 'General Inquiry' }) 
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
               <a
-                href={`https://wa.me/919876543210?text=${encodeURIComponent(`Hello Shree Pratham, I just submitted inquiry #${submittedInquiry.id} regarding ${submittedInquiry.vertical}. My name is ${submittedInquiry.name}.`)}`}
+                href={`https://wa.me/918851912882?text=${encodeURIComponent(`Hello Shree Pratham, I just submitted inquiry #${submittedInquiry.id} regarding ${submittedInquiry.vertical}. My name is ${submittedInquiry.name}.`)}`}
                 target="_blank"
                 rel="noreferrer"
                 style={{
@@ -249,7 +249,7 @@ const ContactModal = ({ isOpen, onClose, initialVertical = 'General Inquiry' }) 
                     type="tel"
                     required
                     className="form-input"
-                    placeholder="+91 98765 43210"
+                    placeholder="+91 98XXX XXXXX"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   />

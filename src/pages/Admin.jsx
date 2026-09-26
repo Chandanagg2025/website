@@ -402,7 +402,7 @@ const Admin = () => {
                     <td style={{ padding: '0.75rem' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                         <span style={{ fontSize: '0.74rem', color: '#6ee7b7', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                          <Mail size={12} /> {officialSalesEmail || 'sales@shreepratham.com'}
+                          <Mail size={12} /> {officialSalesEmail || 'contact@shreepratham.com'}
                         </span>
                         <button
                           type="button"
@@ -1025,12 +1025,12 @@ const Admin = () => {
                 </div>
 
                 <div style={{ background: '#090d16', border: '1px solid var(--border-gold)', padding: '0.4rem 0.9rem', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem', color: 'var(--accent-gold-light)', fontWeight: 700 }}>
-                  Sender: {officialSalesEmail || 'sales@shreepratham.com'}
+                  Sender: {officialSalesEmail || 'contact@shreepratham.com'}
                 </div>
               </div>
 
               <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '8px', padding: '1rem', marginBottom: '1.5rem', fontSize: '0.85rem', color: '#e2e8f0' }}>
-                ✓ <strong>Sender Email Registered:</strong> Every customer order instantly generates and sends a branded, itemized tax invoice directly from <strong>sales@shreepratham.com</strong> to the customer's billing email.
+                ✓ <strong>Sender Email Registered:</strong> Every customer order instantly generates and sends a branded, itemized tax invoice directly from <strong>contact@shreepratham.com</strong> to the customer's billing email.
               </div>
 
               <h4 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#fff' }}>

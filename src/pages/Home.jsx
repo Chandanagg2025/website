@@ -80,15 +80,14 @@ const Home = () => {
 
   return (
     <div>
-      {/* 1. HERO SECTION WITH BRAND PROMISE - FULL SCREEN VIEWPORT */}
+      {/* 1. HERO SECTION WITH BRAND PROMISE */}
       <section className="fullscreen-hero" style={{
         position: 'relative',
-        minHeight: 'calc(100dvh - 105px)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: '3rem 0 2.5rem 0',
+        padding: 'clamp(2rem, 5vw, 3rem) 0 clamp(1.5rem, 4vw, 2.5rem) 0',
         background: 'radial-gradient(ellipse at 50% 25%, rgba(245, 158, 11, 0.16) 0%, rgba(8, 12, 20, 1) 85%)',
         overflow: 'hidden'
       }}>
@@ -145,14 +144,14 @@ const Home = () => {
           </p>
 
           {/* Hero CTAs */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center', marginBottom: '2.5rem' }}>
-            <a href="#verticals" className="btn-gold" style={{ padding: '0.9rem 2rem', fontSize: '1rem' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center', marginBottom: '2.5rem' }}>
+            <a href="#verticals" className="btn-gold" style={{ padding: '0.8rem 1.6rem', fontSize: '0.95rem' }}>
               Explore Our 5 Verticals <ArrowRight size={18} />
             </a>
-            <Link to="/gifts" className="btn-outline" style={{ padding: '0.9rem 2rem', fontSize: '1rem' }}>
+            <Link to="/gifts" className="btn-outline" style={{ padding: '0.8rem 1.6rem', fontSize: '0.95rem' }}>
               Browse Gift Gallery
             </Link>
-            <Link to="/water" className="btn-secondary" style={{ padding: '0.9rem 2rem', fontSize: '1rem' }}>
+            <Link to="/water" className="btn-secondary" style={{ padding: '0.8rem 1.6rem', fontSize: '0.95rem' }}>
               Drinking Water Delivery
             </Link>
           </div>
@@ -160,10 +159,11 @@ const Home = () => {
           {/* Statistics Grid */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '1.25rem',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            gap: '0.75rem',
             maxWidth: '1150px',
-            margin: '0 auto 1.5rem auto'
+            margin: '0 auto 1.5rem auto',
+            width: '100%'
           }}>
             <div className="glass-card" style={{ padding: '1.25rem' }}>
               <div style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--accent-gold-light)', lineHeight: 1 }}>50,000+</div>
@@ -218,7 +218,7 @@ const Home = () => {
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: '1.5rem' }}>
             {verticals.map((vert, idx) => {
               const Icon = vert.icon;
               return (
@@ -310,7 +310,7 @@ const Home = () => {
             </Link>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: '1.5rem' }}>
             {/* Highlight 1: Gift Gallery */}
             {giftProducts.slice(0, 1).map(gift => (
               <div key={gift.id} className="glass-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
@@ -442,7 +442,7 @@ const Home = () => {
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', marginBottom: '4rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: '1.5rem', marginBottom: '4rem' }}>
             {testimonials.map(item => (
               <div key={item.id} className="glass-card" style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '1rem' }}>

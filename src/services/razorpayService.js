@@ -111,7 +111,7 @@ export const initiateRazorpayCheckout = async ({
         address: orderDetails.customer?.address || 'Pan-India Delivery',
         slot: orderDetails.deliverySlot || 'Standard Delivery',
         merchant_upi: RAZORPAY_CONFIG.MERCHANT_UPI_ID,
-        merchant_email: 'sales@shreepratham.com'
+        merchant_email: 'contact@shreepratham.com'
       },
       theme: {
         color: '#f59e0b' // Shree Pratham luxury gold brand color

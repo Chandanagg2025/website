@@ -16,7 +16,7 @@ const WhatsAppButton = () => {
     'Hello Shree Pratham, I am visiting your website and would like more details about your services.'
   );
 
-  const phoneNumber = '919876543210'; // Official Shree Pratham WhatsApp business number
+  const phoneNumber = '918851912882'; // Official Shree Pratham WhatsApp business number
 
   const handleSend = (textToSend = message) => {
     const encoded = encodeURIComponent(textToSend || 'Hello Shree Pratham');

@@ -1,9 +1,9 @@
 // ========================================================
 // Shree Pratham Official Email Dispatch Service
-// Sender Address: sales@shreepratham.com
+// Sender Address: contact@shreepratham.com
 // ========================================================
 
-export const OFFICIAL_SALES_EMAIL = 'sales@shreepratham.com';
+export const OFFICIAL_SALES_EMAIL = 'contact@shreepratham.com';
 export const OFFICIAL_SENDER_NAME = 'Shree Pratham Sales & Fulfillment';
 
 /**
@@ -164,7 +164,7 @@ export const generateOrderEmailHtml = (order) => {
               <div style="font-weight: 700; color: #334155; margin-bottom: 6px;">SHREE PRATHAM CONGLOMERATE</div>
               <div>Official Sales Desk: <a href="mailto:${OFFICIAL_SALES_EMAIL}" style="color: #d97706; text-decoration: none;">${OFFICIAL_SALES_EMAIL}</a> • Web: <a href="https://www.shreepratham.com" style="color: #64748b;">www.shreepratham.com</a></div>
               <div style="margin-top: 8px; color: #94a3b8; font-size: 11px;">
-                Registered Enterprise: GSTIN 27AABCS1429B1Z8 • ISO 9001:2015 & FSSAI Certified Pan-India Fulfillment Hubs
+                Registered Enterprise: GSTIN 07ELQPA7054H1ZW • ISO 9001:2015 & FSSAI Certified Pan-India Fulfillment Hubs
               </div>
             </td>
           </tr>
@@ -220,14 +220,14 @@ TOTAL AMOUNT PAID: ₹${(order.totalAmount || 0).toLocaleString()}
 
 For inquiries or amendments, reply directly to:
 ${OFFICIAL_SALES_EMAIL}
-Phone: +91 (022) 6982-5000 / +91 98201 23456
+Phone: +91 (022) 6982-5000
 Official Enterprise Desk: Shree Pratham Conglomerate
 ==================================================
 `;
 };
 
 /**
- * Dispatches an order confirmation email from sales@shreepratham.com
+ * Dispatches an order confirmation email from contact@shreepratham.com
  */
 export const sendOrderConfirmationEmail = async (order) => {
   const recipientEmail = order.customer?.email || 'customer@example.com';
