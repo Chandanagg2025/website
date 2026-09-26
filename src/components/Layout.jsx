@@ -136,7 +136,7 @@ const Layout = () => {
               }}
               title="Click to request a callback"
             >
-              <Phone size={12} color="var(--accent-gold)" /> +91 (022) 6982-5000
+              <Phone size={12} color="var(--accent-gold)" /> +91 8851912882
             </button>
 
             <button
@@ -154,7 +154,7 @@ const Layout = () => {
               }}
               title="Click to contact us"
             >
-              <Mail size={12} color="var(--accent-gold)" /> contact@shreepratham.com
+              <Mail size={12} color="var(--accent-gold)" /> sales@shreepratham.com
             </button>
 
             <button
@@ -246,7 +246,7 @@ const Layout = () => {
               }}>
                 SHREE PRATHAM
               </div>
-              <div style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.18em', color: 'var(--text-muted)', fontWeight: 600 }}>
+              <div style={{ fontSize: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.18em', color: 'var(--text-muted)', fontWeight: 300 }}>
                 Enterprise & Lifestyle Multi-Vertical
               </div>
             </div>
