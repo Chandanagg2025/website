@@ -41,18 +41,6 @@ const Home = () => {
       cta: 'Order Water & Subscriptions'
     },
     {
-      id: 'appliances',
-      name: 'Industrial Appliances',
-      subtitle: 'Commercial Foodservice & Kitchen Engineering',
-      icon: Wrench,
-      accent: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-      color: '#818cf8',
-      image: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?q=80&w=800&auto=format&fit=crop',
-      features: ['Deep Freezers & Display Chillers', 'Heavy 4-Burner Gas Ranges', 'Spiral Dough Mixers 30KG', 'Side-by-Side Spec Comparison'],
-      link: '/appliances',
-      cta: 'View Equipment & RFQs'
-    },
-    {
       id: 'marketing',
       name: 'Digital Marketing',
       subtitle: 'Performance Revenue Acceleration & Social Brand',

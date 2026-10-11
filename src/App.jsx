@@ -3,7 +3,6 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import Gifts from './pages/Gifts';
 import DrinkingWater from './pages/DrinkingWater';
-import IndustrialAppliances from './pages/IndustrialAppliances';
 import DigitalMarketing from './pages/DigitalMarketing';
 import ITServices from './pages/ITServices';
 import Cart from './pages/Cart';
@@ -31,10 +30,6 @@ function App() {
         {/* 3. Drinking Water Supply */}
         <Route path="water" element={<DrinkingWater />} />
         <Route path="bottles" element={<Navigate to="/water" replace />} />
-
-        {/* 4. Industrial Appliances */}
-        <Route path="appliances" element={<IndustrialAppliances />} />
-        <Route path="industrial" element={<Navigate to="/appliances" replace />} />
 
         {/* 5. Digital Marketing */}
         <Route path="marketing" element={<DigitalMarketing />} />

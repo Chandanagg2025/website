@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   Menu, X, ShoppingCart, User, Gift, Droplets,
-  Wrench, TrendingUp, Monitor, ChevronRight, Phone, Mail,
+  TrendingUp, Monitor, ChevronRight, Phone, Mail,
   Sparkles, PhoneCall, ShieldCheck
 } from 'lucide-react';
 import { useProducts } from '../context/ProductContext';
@@ -39,7 +39,6 @@ const Layout = () => {
     { name: 'Home', path: '/', icon: null },
     { name: 'Gift Gallery', path: '/gifts', icon: Gift },
     { name: 'Drinking Water', path: '/water', icon: Droplets },
-    { name: 'Industrial Appliances', path: '/appliances', icon: Wrench, badge: 'Under Dev' },
     { name: 'Digital Marketing', path: '/marketing', icon: TrendingUp },
     { name: 'IT Services', path: '/it-services', icon: Monitor }
   ];
@@ -524,20 +523,6 @@ const Layout = () => {
                 <li><Link to="/water" style={{ color: 'inherit' }}>Commercial RO Purifiers</Link></li>
                 <li><Link to="/water" style={{ color: 'inherit' }}>Weekly & Monthly Subscriptions</Link></li>
                 <li><Link to="/water" style={{ color: 'inherit' }}>Pincode Service Area Checker</Link></li>
-              </ul>
-            </div>
-
-            {/* Vertical 3: Industrial Appliances */}
-            <div className="footer-hide-mobile">
-              <h4 style={{ fontSize: '1rem', color: 'var(--accent-gold-light)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Wrench size={16} /> Industrial Appliances
-              </h4>
-              <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
-                <li><Link to="/appliances?cat=Refrigeration" style={{ color: 'inherit' }}>Commercial Deep Freezers</Link></li>
-                <li><Link to="/appliances?cat=Refrigeration" style={{ color: 'inherit' }}>Glass Display Chillers</Link></li>
-                <li><Link to="/appliances?cat=Cooking" style={{ color: 'inherit' }}>Heavy-Duty 4-Burner Ranges</Link></li>
-                <li><Link to="/appliances?cat=Processing" style={{ color: 'inherit' }}>Spiral Dough Kneaders</Link></li>
-                <li><Link to="/appliances" style={{ color: 'inherit' }}>Bulk Quotation & Comparison</Link></li>
               </ul>
             </div>
 

@@ -397,7 +397,7 @@ const Account = () => {
                 <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
                   Explore heavy kitchen equipment and request institutional bulk pricing.
                 </p>
-                <Link to="/appliances" className="btn-gold">Browse Industrial Appliances</Link>
+                <Link to="/contact" className="btn-gold">Contact Us for a Quote</Link>
               </div>
             ) : (
               quotes.map(quote => (
