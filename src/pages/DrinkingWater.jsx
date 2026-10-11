@@ -84,7 +84,8 @@ const DrinkingWater = () => {
 
   const filteredProducts = waterProducts.filter(item => {
     if (selectedType === 'All') return true;
-    return item.type.toLowerCase() === selectedType.toLowerCase();
+    const typeStr = item.type || item.category || 'Jar';
+    return typeStr.toLowerCase() === selectedType.toLowerCase();
   });
 
   return (

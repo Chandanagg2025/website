@@ -11,10 +11,16 @@ import Checkout from './pages/Checkout';
 import Account from './pages/Account';
 import CustomerLogin from './pages/CustomerLogin';
 import Contact from './pages/Contact';
+import UnderDevelopment from './pages/UnderDevelopment';
+import AdminApp from './admin/AdminApp';
 
 function App() {
   return (
     <Routes>
+      {/* Admin Panel Portal (Zero-Lag Direct Integration) */}
+      <Route path="/admin/*" element={<AdminApp />} />
+
+      {/* Main Website Storefront */}
       <Route path="/" element={<Layout />}>
         {/* 1. Home (Multi-Vertical Overview) */}
         <Route index element={<Home />} />
@@ -46,6 +52,10 @@ function App() {
         <Route path="login" element={<CustomerLogin />} />
         <Route path="register" element={<CustomerLogin />} />
         <Route path="contact" element={<Contact />} />
+
+        {/* 9. Under Development (for unfinished sections) */}
+        <Route path="coming-soon" element={<UnderDevelopment />} />
+        <Route path="coming-soon/:section" element={<UnderDevelopment />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

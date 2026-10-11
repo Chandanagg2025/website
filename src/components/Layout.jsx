@@ -3,7 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   Menu, X, ShoppingCart, User, Gift, Droplets,
   Wrench, TrendingUp, Monitor, ChevronRight, Phone, Mail,
-  Sparkles, PhoneCall
+  Sparkles, PhoneCall, ShieldCheck
 } from 'lucide-react';
 import { useProducts } from '../context/ProductContext';
 import { useAuth } from '../context/AuthContext';
@@ -39,7 +39,7 @@ const Layout = () => {
     { name: 'Home', path: '/', icon: null },
     { name: 'Gift Gallery', path: '/gifts', icon: Gift },
     { name: 'Drinking Water', path: '/water', icon: Droplets },
-    { name: 'Industrial Appliances', path: '/appliances', icon: Wrench },
+    { name: 'Industrial Appliances', path: '/appliances', icon: Wrench, badge: 'Under Dev' },
     { name: 'Digital Marketing', path: '/marketing', icon: TrendingUp },
     { name: 'IT Services', path: '/it-services', icon: Monitor }
   ];
@@ -116,6 +116,22 @@ const Layout = () => {
             >
               <Mail size={12} color="var(--accent-gold)" /> contact@shreepratham.com
             </button>
+
+            <Link
+              to="/admin"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                color: 'var(--accent-emerald-light)',
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: '0.78rem'
+              }}
+              title="Open Admin Operations Console"
+            >
+              <ShieldCheck size={13} color="#10b981" /> Admin Console
+            </Link>
           </div>
         </div>
       </div>
@@ -202,6 +218,19 @@ const Layout = () => {
                 >
                   {Icon && <Icon size={15} />}
                   {link.name}
+                  {link.badge && (
+                    <span style={{
+                      fontSize: '0.65rem',
+                      padding: '1px 5px',
+                      borderRadius: '4px',
+                      background: 'rgba(99, 102, 241, 0.25)',
+                      border: '1px solid rgba(99, 102, 241, 0.5)',
+                      color: '#c7d2fe',
+                      fontWeight: 700
+                    }}>
+                      {link.badge}
+                    </span>
+                  )}
                 </NavLink>
               );
             })}
@@ -355,6 +384,19 @@ const Layout = () => {
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                     {Icon && <Icon size={18} color="var(--accent-gold)" />}
                     {link.name}
+                    {link.badge && (
+                      <span style={{
+                        fontSize: '0.65rem',
+                        padding: '1px 5px',
+                        borderRadius: '4px',
+                        background: 'rgba(99, 102, 241, 0.25)',
+                        border: '1px solid rgba(99, 102, 241, 0.5)',
+                        color: '#c7d2fe',
+                        fontWeight: 700
+                      }}>
+                        {link.badge}
+                      </span>
+                    )}
                   </span>
                   <ChevronRight size={16} color="var(--text-subtle)" />
                 </NavLink>
@@ -540,7 +582,7 @@ const Layout = () => {
               <Link to="/cart" style={{ color: 'inherit' }}>Shopping Cart</Link>
               <Link to="/account" style={{ color: 'inherit' }}>Order Tracking</Link>
               <Link to="/login" style={{ color: 'inherit' }}>Customer Login</Link>
-              <Link to="/admin/login" style={{ color: 'inherit' }}>Admin Panel</Link>
+              <Link to="/admin" style={{ color: 'var(--accent-emerald-light)', fontWeight: 600 }}>Admin Console</Link>
             </div>
           </div>
         </div>

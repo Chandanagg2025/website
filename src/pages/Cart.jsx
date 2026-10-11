@@ -125,12 +125,23 @@ const Cart = () => {
                       marginTop: '0.6rem',
                       color: 'var(--text-muted)'
                     }}>
-                      <div style={{ color: 'var(--accent-gold-light)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                        <Sparkles size={12} /> Custom Engraving: "{item.customization.engravingText}"
+                      <div style={{ color: 'var(--accent-gold-light)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <Sparkles size={12} />
+                        {item.customization.customText
+                          ? `Customization: "${item.customization.customText}"`
+                          : (item.customization.engravingText ? `Custom Engraving: "${item.customization.engravingText}"` : 'Bespoke Customization')}
                       </div>
-                      <div style={{ fontSize: '0.75rem', marginTop: '0.2rem' }}>
-                        Wrap: {item.customization.wrapName} • Ribbon: {item.customization.ribbonName}
-                        {item.customization.waxSeal && ' • Royal Wax Seal'}
+                      <div style={{ fontSize: '0.75rem', marginTop: '0.3rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem', color: '#cbd5e1' }}>
+                        {item.customization.size && <span>Size: <strong style={{ color: '#fff' }}>{item.customization.size}</strong></span>}
+                        {item.customization.color && <span>Color: <strong style={{ color: '#fff' }}>{item.customization.color}</strong></span>}
+                        {item.customization.style && <span>Style: <strong style={{ color: '#fff' }}>{item.customization.style}</strong></span>}
+                        {item.customization.deity && <span>Deity: <strong style={{ color: '#fff' }}>{item.customization.deity}</strong></span>}
+                        {item.customization.backText && <span>Back: <strong style={{ color: '#fff' }}>"{item.customization.backText}"</strong></span>}
+                        {item.customization.wrapName && <span>Wrap: {item.customization.wrapName}</span>}
+                        {item.customization.ribbonName && <span>Ribbon: {item.customization.ribbonName}</span>}
+                        {item.customization.photoUploaded && (
+                          <span style={{ color: '#10b981', fontWeight: 600 }}>✓ Custom Photo Included</span>
+                        )}
                       </div>
                     </div>
                   )}

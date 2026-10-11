@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
-  Gift, Search, Filter, Sparkles, Star, CheckCircle2,
-  SlidersHorizontal, Heart, Shield, RefreshCw
+  Gift, Search, Sparkles, Star,
+  SlidersHorizontal, ShoppingBag, RefreshCw, Palette, Check
 } from 'lucide-react';
 import { useProducts } from '../context/ProductContext';
 import PersonalizationModal from '../components/PersonalizationModal';
 
-const CATEGORIES = ['All', 'Birthday', 'Corporate', 'Wedding', 'Festive'];
+const CATEGORIES = ['All', 'Personalized Studio', 'Birthday', 'Corporate', 'Wedding', 'Festive'];
 
 const Gifts = () => {
   const { giftProducts, addToCart } = useProducts();
@@ -33,15 +33,29 @@ const Gifts = () => {
     }
   };
 
+  // Find the 5 dedicated customizable products
+  const customStudioItems = useMemo(() => {
+    return giftProducts.filter(item =>
+      item.isPersonalizable ||
+      (item.category || '').toLowerCase().includes('personalized') ||
+      ['custom-mug', 'custom-tshirt', 'custom-pillow', 'custom-keychain', 'custom-god-dress'].includes(item.id)
+    );
+  }, [giftProducts]);
+
+  // Standard or filtered catalog
   const filteredProducts = useMemo(() => {
     return giftProducts
       .filter(item => {
-        const matchesCategory = selectedCategory === 'All' || item.category.toLowerCase() === selectedCategory.toLowerCase();
-        const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.category.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = selectedCategory === 'All' ||
+          (item.category || '').toLowerCase() === selectedCategory.toLowerCase() ||
+          (selectedCategory === 'Personalized Studio' && item.isPersonalizable);
+
+        const matchesSearch = (item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (item.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (item.category || '').toLowerCase().includes(searchQuery.toLowerCase());
+
         const matchesPrice = item.price <= maxPrice;
-        const matchesRating = item.rating >= minRating;
+        const matchesRating = (item.rating || 5) >= minRating;
         const matchesStock = onlyInStock ? item.inStock : true;
 
         return matchesCategory && matchesSearch && matchesPrice && matchesRating && matchesStock;
@@ -49,17 +63,17 @@ const Gifts = () => {
       .sort((a, b) => {
         if (sortBy === 'price-low') return a.price - b.price;
         if (sortBy === 'price-high') return b.price - a.price;
-        if (sortBy === 'rating') return b.rating - a.rating;
+        if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
         return 0; // featured default
       });
   }, [giftProducts, selectedCategory, searchQuery, maxPrice, minRating, onlyInStock, sortBy]);
 
   return (
     <div style={{ paddingBottom: '5rem' }}>
-      {/* Page Header */}
+      {/* 1. Page Header */}
       <section style={{
         padding: '3.5rem 0 2.5rem 0',
-        background: 'radial-gradient(ellipse at 50% 10%, rgba(245, 158, 11, 0.1) 0%, rgba(8, 12, 20, 1) 80%)',
+        background: 'radial-gradient(ellipse at 50% 10%, rgba(245, 158, 11, 0.12) 0%, rgba(8, 12, 20, 1) 80%)',
         borderBottom: '1px solid var(--border-subtle)',
         textAlign: 'center'
       }}>
@@ -68,10 +82,10 @@ const Gifts = () => {
             <Sparkles size={14} /> Shree Pratham Gift Gallery
           </span>
           <h1 style={{ fontSize: 'clamp(2.2rem, 4vw, 3.2rem)', marginBottom: '0.75rem' }}>
-            Bespoke Luxury Hampers & Custom Keepsakes
+            Bespoke Luxury Hampers, Gifts & Custom Studio
           </h1>
-          <p style={{ color: 'var(--text-muted)', maxWidth: '700px', margin: '0 auto', fontSize: '1.05rem' }}>
-            Every gift is customized with precision laser engraving, handcrafted satin packaging, and personalized notes for weddings, milestones, and high-impact corporate relationships.
+          <p style={{ color: 'var(--text-muted)', maxWidth: '720px', margin: '0 auto', fontSize: '1.05rem', lineHeight: 1.6 }}>
+            Curated artisan hampers, festive pooja treasures, and our bespoke customization studio for personalized mugs, t-shirts, cushions, keychains, and sacred deity poshak dresses.
           </p>
 
           {/* Category Tabs */}
@@ -82,33 +96,154 @@ const Gifts = () => {
             gap: '0.6rem',
             marginTop: '2rem'
           }}>
-            {CATEGORIES.map(cat => (
-              <button
-                key={cat}
-                onClick={() => handleCategoryChange(cat)}
-                style={{
-                  padding: '0.6rem 1.4rem',
-                  borderRadius: '9999px',
-                  fontSize: '0.9rem',
-                  fontWeight: 600,
-                  background: selectedCategory.toLowerCase() === cat.toLowerCase()
-                    ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
-                    : 'rgba(255, 255, 255, 0.05)',
-                  color: selectedCategory.toLowerCase() === cat.toLowerCase() ? '#080c14' : '#fff',
-                  border: selectedCategory.toLowerCase() === cat.toLowerCase()
-                    ? '1px solid var(--accent-gold)'
-                    : '1px solid var(--border-subtle)',
-                  boxShadow: selectedCategory.toLowerCase() === cat.toLowerCase() ? 'var(--gold-glow)' : 'none'
-                }}
-              >
-                {cat === 'All' ? '✨ All Collections' : cat}
-              </button>
-            ))}
+            {CATEGORIES.map(cat => {
+              const isSelected = selectedCategory.toLowerCase() === cat.toLowerCase();
+              return (
+                <button
+                  key={cat}
+                  onClick={() => handleCategoryChange(cat)}
+                  style={{
+                    padding: '0.6rem 1.4rem',
+                    borderRadius: '9999px',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    background: isSelected
+                      ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                      : 'rgba(255, 255, 255, 0.05)',
+                    color: isSelected ? '#080c14' : '#fff',
+                    border: isSelected
+                      ? '1px solid var(--accent-gold)'
+                      : '1px solid var(--border-subtle)',
+                    boxShadow: isSelected ? 'var(--gold-glow)' : 'none',
+                    cursor: 'pointer',
+                    transition: 'var(--transition)'
+                  }}
+                >
+                  {cat === 'All' ? '✨ All Collections' : cat === 'Personalized Studio' ? '🎨 Personalized Studio' : cat}
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Main Content Area: Filters + Grid */}
+      {/* 2. DEDICATED PERSONALIZED & CUSTOM STUDIO SECTION */}
+      {selectedCategory === 'All' && (
+        <section style={{
+          padding: '3.5rem 0 3rem 0',
+          background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.5) 0%, rgba(8, 12, 20, 0.8) 100%)',
+          borderBottom: '1px solid var(--border-subtle)'
+        }}>
+          <div className="container">
+            <div className="flex justify-between items-end" style={{ marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <span className="badge-gold" style={{ marginBottom: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Palette size={14} /> 100% Bespoke Customization Studio
+                </span>
+                <h2 style={{ fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', margin: '0 0 0.4rem 0' }}>
+                  Custom Print, Keepsakes & Divine Poshak
+                </h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0, maxWidth: '650px' }}>
+                  Add your photos, names, company branding, and custom sacred embroidery to our 5 signature personalized items.
+                </p>
+              </div>
+
+              <button
+                onClick={() => handleCategoryChange('Personalized Studio')}
+                className="btn-outline btn-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+              >
+                View Full Studio Collection →
+              </button>
+            </div>
+
+            {/* 5 Dedicated Custom Items Grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '1.25rem'
+            }}>
+              {customStudioItems.slice(0, 5).map(item => {
+                const discount = Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100);
+
+                return (
+                  <div
+                    key={item.id}
+                    className="glass-card-interactive"
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      borderRadius: 'var(--radius-lg)',
+                      overflow: 'hidden',
+                      border: '1px solid rgba(245, 158, 11, 0.35)',
+                      background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.85) 0%, rgba(9, 13, 22, 0.95) 100%)'
+                    }}
+                  >
+                    {/* Visual Preview */}
+                    <div style={{ position: 'relative', height: '190px', overflow: 'hidden' }}>
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                      <span className="badge-gold" style={{ position: 'absolute', top: '10px', left: '10px', fontSize: '0.72rem', padding: '0.2rem 0.55rem' }}>
+                        ✨ Customizable
+                      </span>
+                      {discount > 0 && (
+                        <span className="badge-green" style={{ position: 'absolute', top: '10px', right: '10px', fontSize: '0.72rem' }}>
+                          {discount}% OFF
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Card Content */}
+                    <div style={{ padding: '1.2rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', color: '#fbbf24', marginBottom: '0.35rem' }}>
+                        <Star size={13} fill="#fbbf24" />
+                        <strong style={{ color: '#fff' }}>{item.rating}</strong>
+                        <span style={{ color: 'var(--text-subtle)' }}>({item.reviews})</span>
+                      </div>
+
+                      <h4 style={{ fontSize: '1.05rem', color: '#fff', marginBottom: '0.45rem', lineHeight: 1.3 }}>
+                        {item.name}
+                      </h4>
+
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', lineHeight: 1.5, flex: 1, marginBottom: '1rem' }}>
+                        {item.description.slice(0, 85)}...
+                      </p>
+
+                      {/* Pricing & CTA */}
+                      <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '0.85rem' }}>
+                        <div className="flex justify-between items-center" style={{ marginBottom: '0.75rem' }}>
+                          <div>
+                            <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--accent-gold-light)' }}>
+                              ₹{item.price}
+                            </span>
+                            <span style={{ textDecoration: 'line-through', color: 'var(--text-subtle)', fontSize: '0.82rem', marginLeft: '0.35rem' }}>
+                              ₹{item.originalPrice}
+                            </span>
+                          </div>
+                          <span style={{ fontSize: '0.72rem', color: '#6ee7b7' }}>Ready to Personalize</span>
+                        </div>
+
+                        <button
+                          className="btn-gold"
+                          onClick={() => setPersonalizingProduct(item)}
+                          style={{ width: '100%', padding: '0.65rem', justifyContent: 'center', fontSize: '0.85rem' }}
+                        >
+                          <Sparkles size={15} /> Customize & Order
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 3. Main Catalog Section (Standard + Filtered Grid) */}
       <section style={{ paddingTop: '2.5rem' }}>
         <div className="container">
           {/* Controls Bar */}
@@ -125,7 +260,7 @@ const Gifts = () => {
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Search gifts, pens, hampers..."
+                  placeholder="Search gifts, mugs, shirts, hampers..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   style={{ paddingLeft: '2.5rem' }}
@@ -140,9 +275,9 @@ const Gifts = () => {
                 </div>
                 <input
                   type="range"
-                  min="800"
+                  min="200"
                   max="5000"
-                  step="100"
+                  step="50"
                   value={maxPrice}
                   onChange={e => setMaxPrice(parseInt(e.target.value))}
                   style={{ width: '100%', accentColor: 'var(--accent-gold)' }}
@@ -172,7 +307,7 @@ const Gifts = () => {
                     onChange={e => setOnlyInStock(e.target.checked)}
                     style={{ width: '18px', height: '18px', accentColor: 'var(--accent-gold)' }}
                   />
-                  In Stock Ready to Dispatch
+                  In Stock Only
                 </label>
               </div>
             </div>
@@ -180,7 +315,7 @@ const Gifts = () => {
 
           {/* Results Summary */}
           <div className="flex justify-between items-center" style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-            <span>Showing <strong style={{ color: '#fff' }}>{filteredProducts.length}</strong> handcrafted gift collections</span>
+            <span>Showing <strong style={{ color: '#fff' }}>{filteredProducts.length}</strong> collections</span>
             {(searchQuery || selectedCategory !== 'All' || maxPrice < 5000) && (
               <button
                 onClick={() => {
@@ -190,7 +325,7 @@ const Gifts = () => {
                   searchParams.delete('category');
                   setSearchParams(searchParams);
                 }}
-                style={{ background: 'transparent', color: 'var(--accent-gold-light)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.85rem' }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent-gold-light)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.85rem' }}
               >
                 <RefreshCw size={14} /> Reset Filters
               </button>
@@ -203,7 +338,7 @@ const Gifts = () => {
               <Gift size={48} color="var(--accent-gold)" style={{ margin: '0 auto 1rem auto' }} />
               <h3 style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}>No Gifts Found</h3>
               <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-                Try adjusting your price filter or selecting another category like Corporate or Wedding.
+                Try adjusting your price filter or selecting another category like Personalized Studio or Corporate.
               </p>
               <button className="btn-gold" onClick={() => handleCategoryChange('All')}>
                 View All Gifts
@@ -217,6 +352,7 @@ const Gifts = () => {
             }}>
               {filteredProducts.map(product => {
                 const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+                const isCustomizable = product.isPersonalizable || product.category === 'Personalized Studio';
 
                 return (
                   <div
@@ -244,13 +380,13 @@ const Gifts = () => {
                     {/* Details Area */}
                     <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
                       <div className="flex justify-between items-center" style={{ marginBottom: '0.5rem' }}>
-                        <span style={{ fontSize: '0.78rem', color: 'var(--accent-gold-light)', fontWeight: 600 }}>
-                          ✨ FREE LASER ENGRAVING
+                        <span style={{ fontSize: '0.78rem', color: isCustomizable ? 'var(--accent-gold-light)' : 'var(--text-subtle)', fontWeight: 600 }}>
+                          {isCustomizable ? '✨ 100% PERSONALIZABLE' : (product.tags?.[0] || 'PREMIUM COLLECTION')}
                         </span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem', color: '#fbbf24' }}>
                           <Star size={14} fill="#fbbf24" />
-                          <strong style={{ color: '#fff' }}>{product.rating}</strong>
-                          <span style={{ color: 'var(--text-subtle)' }}>({product.reviews})</span>
+                          <strong style={{ color: '#fff' }}>{product.rating || 5.0}</strong>
+                          <span style={{ color: 'var(--text-subtle)' }}>({product.reviews || 50})</span>
                         </div>
                       </div>
 
@@ -259,25 +395,6 @@ const Gifts = () => {
                       <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: 1.6, flex: 1, marginBottom: '1.25rem' }}>
                         {product.description}
                       </p>
-
-                      {/* Personalization Tags */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '1.25rem' }}>
-                        {product.personalizationOptions?.map((opt, i) => (
-                          <span
-                            key={i}
-                            style={{
-                              background: 'rgba(255, 255, 255, 0.05)',
-                              border: '1px solid var(--border-subtle)',
-                              borderRadius: '4px',
-                              padding: '0.2rem 0.5rem',
-                              fontSize: '0.72rem',
-                              color: 'var(--text-muted)'
-                            }}
-                          >
-                            ✓ {opt}
-                          </span>
-                        ))}
-                      </div>
 
                       {/* Price & Action */}
                       <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
@@ -290,26 +407,36 @@ const Gifts = () => {
                               ₹{product.originalPrice.toLocaleString()}
                             </span>
                           </div>
-                          <span style={{ fontSize: '0.78rem', color: '#6ee7b7' }}>Ready to Ship</span>
+                          <span style={{ fontSize: '0.78rem', color: product.inStock ? '#6ee7b7' : '#ef4444' }}>
+                            {product.inStock ? 'Ready to Ship' : 'Out of Stock'}
+                          </span>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.75rem' }}>
+                        {/* If product is personalizable (mug, tshirt, pillow, keychain, god dress), show Personalize button. Otherwise, standard Add to Cart! */}
+                        {isCustomizable ? (
                           <button
                             className="btn-gold"
                             onClick={() => setPersonalizingProduct(product)}
-                            style={{ padding: '0.7rem' }}
+                            style={{ width: '100%', padding: '0.75rem', justifyContent: 'center' }}
                           >
-                            <Sparkles size={16} /> Personalize & Add
+                            <Sparkles size={16} /> Personalize & Order
                           </button>
+                        ) : (
                           <button
-                            className="btn-secondary"
+                            className="btn-gold"
+                            disabled={!product.inStock}
                             onClick={() => addToCart(product, 1)}
-                            title="Quick Add Without Personalization"
-                            style={{ padding: '0.7rem' }}
+                            style={{
+                              width: '100%',
+                              padding: '0.75rem',
+                              justifyContent: 'center',
+                              opacity: product.inStock ? 1 : 0.6,
+                              cursor: product.inStock ? 'pointer' : 'not-allowed'
+                            }}
                           >
-                            Quick Add
+                            <ShoppingBag size={16} /> {product.inStock ? 'Add to Cart' : 'Out of Stock'}
                           </button>
-                        </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -320,7 +447,7 @@ const Gifts = () => {
         </div>
       </section>
 
-      {/* Personalization Modal */}
+      {/* 4. Personalization Modal */}
       <PersonalizationModal
         product={personalizingProduct}
         isOpen={!!personalizingProduct}

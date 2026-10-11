@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   Gift, Droplets, Wrench, TrendingUp, Monitor, ArrowRight,
   ShieldCheck, Truck, Star, Award, Sparkles, CheckCircle2,
-  Users, ChevronRight, ChevronDown, Zap, Clock
+  Users, ChevronRight, ChevronDown, Zap, Clock, ShoppingBag
 } from 'lucide-react';
 import { testimonials } from '../data/mockData';
 import { useProducts } from '../context/ProductContext';
@@ -335,10 +335,17 @@ const Home = () => {
                 </div>
                 <button
                   className="btn-gold btn-sm"
-                  style={{ width: '100%' }}
-                  onClick={() => setSelectedGift(gift)}
+                  style={{ width: '100%', justifyContent: 'center' }}
+                  onClick={() => {
+                    if (gift.isPersonalizable) {
+                      setSelectedGift(gift);
+                    } else {
+                      addToCart(gift, 1);
+                    }
+                  }}
                 >
-                  <Sparkles size={14} /> Personalize & Add
+                  {gift.isPersonalizable ? <Sparkles size={14} /> : <ShoppingBag size={14} />}
+                  {gift.isPersonalizable ? 'Personalize & Add' : 'Add to Cart'}
                 </button>
               </div>
             ))}

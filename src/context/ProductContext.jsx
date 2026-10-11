@@ -29,14 +29,25 @@ import {
   sendOrderToCloud,
   sendInquiryToCloud
 } from '../services/firebase';
+import { catalogSync } from '../services/catalogSync';
 
 const ProductContext = createContext();
 
 export const ProductProvider = ({ children }) => {
-  // 1. Catalog States
   const [giftProducts, setGiftProducts] = useState(() => {
     const saved = localStorage.getItem('sp_gift_products') || localStorage.getItem('admin_gifts');
-    return saved ? JSON.parse(saved) : initialGiftProducts;
+    if (!saved) return initialGiftProducts;
+    try {
+      const parsed = JSON.parse(saved);
+      const existingIds = new Set(parsed.map(p => p.id));
+      const missing = initialGiftProducts.filter(p => !existingIds.has(p.id));
+      if (missing.length > 0) {
+        return [...missing, ...parsed];
+      }
+      return parsed;
+    } catch {
+      return initialGiftProducts;
+    }
   });
 
   const [waterProducts, setWaterProducts] = useState(() => {
@@ -184,17 +195,45 @@ export const ProductProvider = ({ children }) => {
     };
   }, []);
 
-  // Sync to LocalStorage
+  // Real-time catalog & orders sync via BroadcastChannel & Storage events
+  useEffect(() => {
+    const unsub = catalogSync.subscribe((event) => {
+      try {
+        if (event.type === 'CATALOG_UPDATE' || event.type === 'STORAGE_CHANGE') {
+          const g = localStorage.getItem('sp_gift_products');
+          if (g) setGiftProducts(JSON.parse(g));
+
+          const w = localStorage.getItem('sp_water_products');
+          if (w) setWaterProducts(JSON.parse(w));
+
+          const a = localStorage.getItem('sp_appliances');
+          if (a) setAppliances(JSON.parse(a));
+
+          const o = localStorage.getItem('sp_orders');
+          if (o) setOrders(JSON.parse(o));
+        }
+      } catch (e) {
+        console.error('Error handling catalog sync event in storefront:', e);
+      }
+    });
+
+    return unsub;
+  }, []);
+
+  // Sync to LocalStorage (dual keys for compatibility)
   useEffect(() => {
     localStorage.setItem('sp_gift_products', JSON.stringify(giftProducts));
+    localStorage.setItem('admin_gifts', JSON.stringify(giftProducts));
   }, [giftProducts]);
 
   useEffect(() => {
     localStorage.setItem('sp_water_products', JSON.stringify(waterProducts));
+    localStorage.setItem('admin_water', JSON.stringify(waterProducts));
   }, [waterProducts]);
 
   useEffect(() => {
     localStorage.setItem('sp_appliances', JSON.stringify(appliances));
+    localStorage.setItem('admin_appliances', JSON.stringify(appliances));
   }, [appliances]);
 
   useEffect(() => {
@@ -665,20 +704,115 @@ export const ProductProvider = ({ children }) => {
     setCompareList([]);
   };
 
-  // Admin Catalog Updates
+  // Admin Catalog Updates with Real-Time Broadcast
   const addProductToCatalog = (vertical, item) => {
-    const newItem = { ...item, id: `${vertical}-${Date.now()}` };
-    if (vertical === 'gifts') setGiftProducts(prev => [newItem, ...prev]);
-    else if (vertical === 'water') setWaterProducts(prev => [newItem, ...prev]);
-    else if (vertical === 'appliances') setAppliances(prev => [newItem, ...prev]);
-    showToast(`New item added to ${vertical} catalog!`, 'success');
+    const newItem = {
+      ...item,
+      id: item.id || `${vertical}-${Date.now()}`,
+      inStock: item.stock !== undefined ? parseInt(item.stock || '0') > 0 : (item.inStock ?? true)
+    };
+
+    if (vertical === 'gifts') {
+      setGiftProducts(prev => {
+        const updated = [newItem, ...prev];
+        localStorage.setItem('sp_gift_products', JSON.stringify(updated));
+        localStorage.setItem('admin_gifts', JSON.stringify(updated));
+        catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'gifts', data: updated });
+        return updated;
+      });
+    } else if (vertical === 'water') {
+      setWaterProducts(prev => {
+        const updated = [newItem, ...prev];
+        localStorage.setItem('sp_water_products', JSON.stringify(updated));
+        localStorage.setItem('admin_water', JSON.stringify(updated));
+        catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'water', data: updated });
+        return updated;
+      });
+    } else if (vertical === 'appliances') {
+      setAppliances(prev => {
+        const updated = [newItem, ...prev];
+        localStorage.setItem('sp_appliances', JSON.stringify(updated));
+        localStorage.setItem('admin_appliances', JSON.stringify(updated));
+        catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'appliances', data: updated });
+        return updated;
+      });
+    }
+    showToast(`Added "${newItem.name}" to live catalog!`, 'success');
+    return newItem;
+  };
+
+  const updateProductInCatalog = (vertical, id, updates) => {
+    const updater = prev => prev.map(p => {
+      if (p.id !== id) return p;
+      const stockVal = updates.stock !== undefined ? parseInt(updates.stock || '0') : p.stock;
+      const inStockVal = updates.inStock !== undefined ? updates.inStock : (stockVal > 0);
+      return {
+        ...p,
+        ...updates,
+        stock: stockVal,
+        inStock: inStockVal
+      };
+    });
+
+    if (vertical === 'gifts') {
+      setGiftProducts(prev => {
+        const updated = updater(prev);
+        localStorage.setItem('sp_gift_products', JSON.stringify(updated));
+        localStorage.setItem('admin_gifts', JSON.stringify(updated));
+        catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'gifts', data: updated });
+        return updated;
+      });
+    } else if (vertical === 'water') {
+      setWaterProducts(prev => {
+        const updated = updater(prev);
+        localStorage.setItem('sp_water_products', JSON.stringify(updated));
+        localStorage.setItem('admin_water', JSON.stringify(updated));
+        catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'water', data: updated });
+        return updated;
+      });
+    } else if (vertical === 'appliances') {
+      setAppliances(prev => {
+        const updated = updater(prev);
+        localStorage.setItem('sp_appliances', JSON.stringify(updated));
+        localStorage.setItem('admin_appliances', JSON.stringify(updated));
+        catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'appliances', data: updated });
+        return updated;
+      });
+    }
+    showToast('Product updated on live storefront!', 'success');
   };
 
   const deleteProductFromCatalog = (vertical, id) => {
-    if (vertical === 'gifts') setGiftProducts(prev => prev.filter(p => p.id !== id));
-    else if (vertical === 'water') setWaterProducts(prev => prev.filter(p => p.id !== id));
-    else if (vertical === 'appliances') setAppliances(prev => prev.filter(p => p.id !== id));
-    showToast('Item deleted from catalog', 'info');
+    if (vertical === 'gifts') {
+      setGiftProducts(prev => {
+        const updated = prev.filter(p => p.id !== id);
+        localStorage.setItem('sp_gift_products', JSON.stringify(updated));
+        localStorage.setItem('admin_gifts', JSON.stringify(updated));
+        catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'gifts', data: updated });
+        return updated;
+      });
+    } else if (vertical === 'water') {
+      setWaterProducts(prev => {
+        const updated = prev.filter(p => p.id !== id);
+        localStorage.setItem('sp_water_products', JSON.stringify(updated));
+        localStorage.setItem('admin_water', JSON.stringify(updated));
+        catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'water', data: updated });
+        return updated;
+      });
+    } else if (vertical === 'appliances') {
+      setAppliances(prev => {
+        const updated = prev.filter(p => p.id !== id);
+        localStorage.setItem('sp_appliances', JSON.stringify(updated));
+        localStorage.setItem('admin_appliances', JSON.stringify(updated));
+        catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'appliances', data: updated });
+        return updated;
+      });
+    }
+    showToast('Item removed from live catalog', 'info');
+  };
+
+  const updateStockInCatalog = (vertical, id, newStock) => {
+    updateProductInCatalog(vertical, id, { stock: newStock, inStock: newStock > 0 });
   };
 
   return (
@@ -691,7 +825,9 @@ export const ProductProvider = ({ children }) => {
       itServices,
       itTiers,
       addProductToCatalog,
+      updateProductInCatalog,
       deleteProductFromCatalog,
+      updateStockInCatalog,
 
       // Cart
       cart,

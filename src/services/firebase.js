@@ -37,7 +37,19 @@ export const getFirebaseConfig = () => {
   return null;
 };
 
-// 2. Initialize Firestore
+// 2. Save config into localStorage
+export const saveFirebaseConfig = (config) => {
+  if (!config || !config.projectId || !config.apiKey) return false;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    return true;
+  } catch (e) {
+    console.error('Error saving firebase config', e);
+    return false;
+  }
+};
+
+// 3. Initialize Firestore
 let dbInstance = null;
 
 export const getDb = () => {
@@ -55,6 +67,28 @@ export const getDb = () => {
   } catch (err) {
     console.error('Failed to initialize Firebase in client:', err);
     return null;
+  }
+};
+
+export const reinitDb = () => {
+  dbInstance = null;
+  return getDb();
+};
+
+export const syncCatalogToCloud = async (vertical, products) => {
+  const db = getDb();
+  if (!db) return false;
+  try {
+    const docRef = doc(db, 'sp_catalog', vertical);
+    await setDoc(docRef, {
+      vertical,
+      products,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    return true;
+  } catch (error) {
+    console.error(`Failed to sync ${vertical} to Firestore:`, error);
+    throw error;
   }
 };
 

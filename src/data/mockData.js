@@ -1,6 +1,100 @@
 // Comprehensive mock data for SHREE PRATHAM across all 5 verticals
 
+export const customStudioProducts = [
+  {
+    id: 'custom-mug',
+    name: 'Personalized Ceramic & Magic Photo Mug',
+    category: 'Personalized Studio',
+    type: 'mug',
+    price: 349,
+    originalPrice: 599,
+    stock: 150,
+    rating: 4.9,
+    reviews: 420,
+    image: '/images/custom_mug.jpg',
+    description: 'High-definition edge-to-edge sublimation print with gloss ceramic finish. Choose from Classic White or Heat-Sensitive Magic Color-Reveal. Microwave & dishwasher safe.',
+    isPersonalizable: true,
+    customizationType: 'mug',
+    inStock: true,
+    sku: 'SP-CST-MUG',
+    tags: ['Personalized Studio', 'Best Seller']
+  },
+  {
+    id: 'custom-tshirt',
+    name: 'Custom Printed Bio-Wash Cotton T-Shirt',
+    category: 'Personalized Studio',
+    type: 'tshirt',
+    price: 499,
+    originalPrice: 899,
+    stock: 200,
+    rating: 4.8,
+    reviews: 380,
+    image: '/images/custom_tshirt.jpg',
+    description: '100% super-combed 180 GSM bio-washed breathable cotton. Direct-to-Film (DTF) vivid printing for your photos, custom artwork, corporate logo, or slogan.',
+    isPersonalizable: true,
+    customizationType: 'tshirt',
+    inStock: true,
+    sku: 'SP-CST-TSHIRT',
+    tags: ['Personalized Studio', 'Apparel']
+  },
+  {
+    id: 'custom-pillow',
+    name: 'Personalized Velvet & Sequin Photo Pillow',
+    category: 'Personalized Studio',
+    type: 'pillow',
+    price: 599,
+    originalPrice: 999,
+    stock: 120,
+    rating: 4.9,
+    reviews: 295,
+    image: '/images/custom_pillow.jpg',
+    description: 'Ultra-plush microfiber filled cushion with vibrant fade-resistant photo printing. Choose between Smooth Satin, Magic Two-Way Reversible Sequin, or Velvet Heart.',
+    isPersonalizable: true,
+    customizationType: 'pillow',
+    inStock: true,
+    sku: 'SP-CST-PILLOW',
+    tags: ['Personalized Studio', 'Home Decor']
+  },
+  {
+    id: 'custom-keychain',
+    name: 'Custom Engraved Metallic & Wooden Keychains',
+    category: 'Personalized Studio',
+    type: 'keychain',
+    price: 199,
+    originalPrice: 399,
+    stock: 300,
+    rating: 4.9,
+    reviews: 510,
+    image: '/images/custom_keychain.jpg',
+    description: 'Precision fiber laser engraved metallic bar, wooden keepsake, or acrylic photo keychain with your name, anniversary date, or vehicle registration plate.',
+    isPersonalizable: true,
+    customizationType: 'keychain',
+    inStock: true,
+    sku: 'SP-CST-KEYCHAIN',
+    tags: ['Personalized Studio', 'Accessories']
+  },
+  {
+    id: 'custom-god-dress',
+    name: 'Handcrafted Designer Deity Poshak & God Dresses',
+    category: 'Personalized Studio',
+    type: 'god-dress',
+    price: 449,
+    originalPrice: 799,
+    stock: 180,
+    rating: 5.0,
+    reviews: 340,
+    image: '/images/god_dress_poshak.jpg',
+    description: 'Exquisite handcrafted deity poshak for Laddu Gopal Ji, Radha Krishna, Mata Rani, and Temple Vigrahas. Tailored in pure silk, heavy zari borders, and gemstone work with custom deity size selection.',
+    isPersonalizable: true,
+    customizationType: 'god-dress',
+    inStock: true,
+    sku: 'SP-CST-GODDRESS',
+    tags: ['Personalized Studio', 'Devotional', 'Handmade']
+  }
+];
+
 export const initialGiftProducts = [
+  ...customStudioProducts,
   {
     id: 'gift-1',
     name: 'Executive Gold Crest Gift Set',
@@ -11,10 +105,9 @@ export const initialGiftProducts = [
     reviews: 128,
     image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=800&auto=format&fit=crop',
     description: 'Bespoke corporate gifting box featuring 24K gold foil pen, premium leatherette notebook, customized metallic keychain & insulated cardholder.',
-    isCustomizable: true,
+    isPersonalizable: false,
     inStock: true,
-    tags: ['Best Seller', 'Corporate'],
-    personalizationOptions: ['Name Engraving', 'Company Logo Stamping', 'Custom Message Card']
+    tags: ['Best Seller', 'Corporate']
   },
   {
     id: 'gift-2',
@@ -26,10 +119,9 @@ export const initialGiftProducts = [
     reviews: 94,
     image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=800&auto=format&fit=crop',
     description: 'Handcrafted velvet keepsake hamper filled with organic dry fruits, saffron-infused treats, scented brass diya, and gold-foil congratulations card.',
-    isCustomizable: true,
+    isPersonalizable: false,
     inStock: true,
-    tags: ['Luxury', 'Wedding'],
-    personalizationOptions: ['Bride & Groom Names', 'Wax Seal Stamping', 'Custom Date Ribbon']
+    tags: ['Luxury', 'Wedding']
   },
   {
     id: 'gift-3',
@@ -41,10 +133,9 @@ export const initialGiftProducts = [
     reviews: 215,
     image: 'https://images.unsplash.com/photo-1577083552431-6e5fd01aa342?q=80&w=800&auto=format&fit=crop',
     description: 'Vibrant celebratory box packed with artisanal chocolates, customized thermal tumbler, personalized birthday plaque, and party sparklers.',
-    isCustomizable: true,
+    isPersonalizable: false,
     inStock: true,
-    tags: ['Trending', 'Birthday'],
-    personalizationOptions: ['Recipient Name', 'Age Number Badge', 'Photo Greeting Card']
+    tags: ['Trending', 'Birthday']
   },
   {
     id: 'gift-4',
@@ -56,10 +147,9 @@ export const initialGiftProducts = [
     reviews: 310,
     image: 'https://images.unsplash.com/photo-1607344645866-009c320c5ab8?q=80&w=800&auto=format&fit=crop',
     description: 'Pure bell-metal brass Aarti Thali set with engraved lotus motifs, natural dhoop cones, silver coin and festive velvet pouch.',
-    isCustomizable: true,
+    isPersonalizable: false,
     inStock: true,
-    tags: ['Festive Special', 'Handmade'],
-    personalizationOptions: ['Family Name Engraving', 'Festive Blessing Message']
+    tags: ['Festive Special', 'Handmade']
   },
   {
     id: 'gift-5',
@@ -71,10 +161,9 @@ export const initialGiftProducts = [
     reviews: 82,
     image: 'https://images.unsplash.com/photo-1548848221-0c2e497ed557?q=80&w=800&auto=format&fit=crop',
     description: 'Assorted Belgian dark, hazelnut praline, and berry infused artisanal chocolates in a reusable mahogany-finished wooden case.',
-    isCustomizable: true,
+    isPersonalizable: false,
     inStock: true,
-    tags: ['Gourmet', 'Birthday'],
-    personalizationOptions: ['Wooden Lid Engraving', 'Satin Ribbon Color']
+    tags: ['Gourmet', 'Birthday']
   },
   {
     id: 'gift-6',
@@ -86,10 +175,9 @@ export const initialGiftProducts = [
     reviews: 140,
     image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?q=80&w=800&auto=format&fit=crop',
     description: 'Plantable seed pen, bamboo flask with digital temperature gauge, cork notebook, and unbleached cotton tote bag.',
-    isCustomizable: true,
+    isPersonalizable: false,
     inStock: true,
-    tags: ['Eco-Friendly', 'Corporate'],
-    personalizationOptions: ['Corporate Logo Laser Print', 'Employee Name']
+    tags: ['Eco-Friendly', 'Corporate']
   }
 ];
 
