@@ -1,86 +1,96 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import {
+  isFirebaseConfigured,
+  getAllowedAdminEmails,
+  adminSignIn,
+  adminSignOut,
+  onAdminAuthChange,
+  changeAdminPassword
+} from '../services/firebase';
 
 const AdminAuthContext = createContext();
 
-const DEFAULT_ADMIN_ID = 'admin';
-const DEFAULT_ADMIN_PASSWORD = 'shree.pratham25';
+const isEmailAllowed = (email) => {
+  const allowed = getAllowedAdminEmails();
+  return allowed.length === 0 || allowed.includes((email || '').toLowerCase());
+};
+
+const friendlyAuthError = (err) => {
+  switch (err?.code) {
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+    case 'auth/invalid-email':
+      return 'Invalid admin email or password.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Please wait a few minutes and try again.';
+    case 'auth/network-request-failed':
+      return 'Network error. Check your internet connection.';
+    case 'auth/operation-not-allowed':
+      return 'Email/Password sign-in is not enabled in Firebase Authentication.';
+    case 'auth/weak-password':
+      return 'New password is too weak (minimum 6 characters).';
+    default:
+      return err?.message || 'Something went wrong. Please try again.';
+  }
+};
 
 export const AdminAuthProvider = ({ children }) => {
-  const [isAdmin, setIsAdmin] = useState(() => {
-    try {
-      return localStorage.getItem('sp_admin_auth') === 'true';
-    } catch {
-      return false;
-    }
-  });
-
-  const [adminId, setAdminId] = useState(() => {
-    try {
-      return localStorage.getItem('sp_admin_id') || DEFAULT_ADMIN_ID;
-    } catch {
-      return DEFAULT_ADMIN_ID;
-    }
-  });
-
-  const [adminPassword, setAdminPassword] = useState(() => {
-    try {
-      return localStorage.getItem('sp_admin_pass') || DEFAULT_ADMIN_PASSWORD;
-    } catch {
-      return DEFAULT_ADMIN_PASSWORD;
-    }
-  });
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(isFirebaseConfigured());
 
   useEffect(() => {
+    if (!isFirebaseConfigured()) {
+      setAuthLoading(false);
+      return;
+    }
+    return onAdminAuthChange(async (firebaseUser) => {
+      if (firebaseUser && !isEmailAllowed(firebaseUser.email)) {
+        await adminSignOut();
+        setUser(null);
+      } else {
+        setUser(firebaseUser);
+      }
+      setAuthLoading(false);
+    });
+  }, []);
+
+  /** Returns { success: true } or { success: false, error: string } */
+  const login = async (email, password) => {
+    if (!isFirebaseConfigured()) {
+      return { success: false, error: 'Firebase is not configured. Add VITE_FIREBASE_* values to .env and restart.' };
+    }
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!isEmailAllowed(cleanEmail)) {
+      return { success: false, error: 'This account is not authorised for admin access.' };
+    }
     try {
-      localStorage.setItem('sp_admin_auth', isAdmin ? 'true' : 'false');
-    } catch (e) {
-      console.error(e);
+      await adminSignIn(cleanEmail, password);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: friendlyAuthError(err) };
     }
-  }, [isAdmin]);
-
-  const login = (enteredId, enteredPassword) => {
-    const cleanId = (enteredId || '').trim().toLowerCase();
-    const cleanPass = (enteredPassword || '').trim();
-
-    const expectedId = (adminId || DEFAULT_ADMIN_ID).trim().toLowerCase();
-    const expectedPass = (adminPassword || DEFAULT_ADMIN_PASSWORD).trim();
-
-    // Check against configured credentials or master defaults
-    const idValid = cleanId === expectedId || cleanId === 'admin' || cleanId === 'admin@shreepratham.com';
-    const passValid = cleanPass === expectedPass || cleanPass === 'admin123' || cleanPass === 'shree@admin';
-
-    if (idValid && passValid) {
-      setIsAdmin(true);
-      return true;
-    }
-    return false;
   };
 
-  const updateCredentials = (newId, newPassword) => {
-    if (!newId || !newPassword) return false;
-    const cleanId = newId.trim();
-    const cleanPass = newPassword.trim();
-    setAdminId(cleanId);
-    setAdminPassword(cleanPass);
+  /** Returns { success: true } or { success: false, error: string } */
+  const updatePassword = async (currentPassword, newPassword) => {
     try {
-      localStorage.setItem('sp_admin_id', cleanId);
-      localStorage.setItem('sp_admin_pass', cleanPass);
-    } catch (e) {
-      console.error(e);
+      await changeAdminPassword(currentPassword, newPassword);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: friendlyAuthError(err) };
     }
-    return true;
   };
 
-  const logout = () => {
-    setIsAdmin(false);
-  };
+  const logout = () => adminSignOut();
 
   return (
     <AdminAuthContext.Provider value={{
-      isAdmin,
-      adminId,
+      isAdmin: Boolean(user),
+      authLoading,
+      adminId: user?.email || '',
       login,
-      updateCredentials,
+      updatePassword,
       logout
     }}>
       {children}

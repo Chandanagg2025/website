@@ -7,13 +7,16 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const { login } = useAdminAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = login(loginId, password);
-    if (!success) {
-      setError('Invalid Admin Login ID or Password. Please try again.');
+    setSubmitting(true);
+    const result = await login(loginId, password);
+    setSubmitting(false);
+    if (!result.success) {
+      setError(result.error || 'Invalid admin email or password. Please try again.');
     }
   };
 
@@ -75,7 +78,7 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div>
-            <label className="form-label">Admin Login ID</label>
+            <label className="form-label">Admin Email</label>
             <div style={{ position: 'relative' }}>
               <User
                 size={16}
@@ -83,10 +86,12 @@ const Login = () => {
                 style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}
               />
               <input
-                type="text"
+                type="email"
+                id="admin-login-email"
+                autoComplete="username"
                 required
                 autoFocus
-                placeholder="Enter Admin ID"
+                placeholder="admin@yourdomain.com"
                 className="form-input"
                 value={loginId}
                 onChange={e => { setLoginId(e.target.value); setError(''); }}
@@ -105,6 +110,8 @@ const Login = () => {
               />
               <input
                 type={showPassword ? 'text' : 'password'}
+                id="admin-login-password"
+                autoComplete="current-password"
                 required
                 placeholder="Enter Admin Password"
                 className="form-input"
@@ -138,10 +145,12 @@ const Login = () => {
 
           <button
             type="submit"
+            id="admin-login-submit"
             className="btn-primary"
-            style={{ width: '100%', padding: '0.85rem', marginTop: '0.25rem', fontSize: '0.95rem' }}
+            disabled={submitting}
+            style={{ width: '100%', padding: '0.85rem', marginTop: '0.25rem', fontSize: '0.95rem', opacity: submitting ? 0.7 : 1 }}
           >
-            Sign In to Control Center <ArrowRight size={16} />
+            {submitting ? 'Signing in...' : <>Sign In to Control Center <ArrowRight size={16} /></>}
           </button>
         </form>
 

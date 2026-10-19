@@ -12,7 +12,15 @@ import Tickets from './pages/Tickets';
 import Settings from './pages/Settings';
 
 function App() {
-  const { isAdmin } = useAdminAuth();
+  const { isAdmin, authLoading } = useAdminAuth();
+
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: '100vh', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+        Verifying admin session...
+      </div>
+    );
+  }
 
   if (!isAdmin) {
     return (

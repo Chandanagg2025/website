@@ -10,25 +10,21 @@ import { getFirebaseConfig } from '../services/firebase';
 const Settings = () => {
   const {
     settings, updateSettings, showToast,
-    cloudConnected, pushAllToCloud, configureFirebase
+    cloudConnected, pushAllToCloud
   } = useAdminData();
-  const { adminId, updateCredentials } = useAdminAuth();
+  const { adminId, updatePassword } = useAdminAuth();
   const [form, setForm] = useState({ ...settings });
 
-  // Admin credentials state
+  // Admin password change state
   const [credForm, setCredForm] = useState({
-    loginId: adminId || 'admin',
+    currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
   const [credMsg, setCredMsg] = useState({ text: '', type: '' });
+  const [credBusy, setCredBusy] = useState(false);
 
-  // Firebase config state
-  const [fbJson, setFbJson] = useState(() => {
-    const existing = getFirebaseConfig();
-    return existing ? JSON.stringify(existing, null, 2) : '';
-  });
-  const [fbStatusMsg, setFbStatusMsg] = useState('');
+  const firebaseProjectId = getFirebaseConfig()?.projectId || '';
   const [isSyncing, setIsSyncing] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
 
@@ -37,10 +33,10 @@ const Settings = () => {
     updateSettings(form);
   };
 
-  const handleUpdateCreds = (e) => {
+  const handleUpdateCreds = async (e) => {
     e.preventDefault();
-    if (!credForm.loginId.trim()) {
-      setCredMsg({ text: 'Admin Login ID cannot be empty.', type: 'error' });
+    if (!credForm.currentPassword) {
+      setCredMsg({ text: 'Please enter your current password.', type: 'error' });
       return;
     }
     if (!credForm.newPassword) {
@@ -51,42 +47,20 @@ const Settings = () => {
       setCredMsg({ text: 'Passwords do not match.', type: 'error' });
       return;
     }
-    if (credForm.newPassword.length < 4) {
-      setCredMsg({ text: 'Password must be at least 4 characters long.', type: 'error' });
+    if (credForm.newPassword.length < 8) {
+      setCredMsg({ text: 'Password must be at least 8 characters long.', type: 'error' });
       return;
     }
 
-    const success = updateCredentials(credForm.loginId.trim(), credForm.newPassword);
-    if (success) {
-      setCredMsg({ text: 'Admin credentials updated successfully!', type: 'success' });
-      showToast('Admin ID & Password updated successfully!');
-      setCredForm(prev => ({ ...prev, newPassword: '', confirmPassword: '' }));
-    }
-  };
-
-  const handleSaveFirebase = (e) => {
-    e.preventDefault();
-    try {
-      let parsed;
-      // Handle both pure JSON or JS object format
-      const cleaned = fbJson.trim().replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2": ');
-      try {
-        parsed = JSON.parse(fbJson);
-      } catch {
-        parsed = JSON.parse(cleaned);
-      }
-
-      if (!parsed.projectId || !parsed.apiKey) {
-        setFbStatusMsg('Config must include at least "apiKey" and "projectId".');
-        return;
-      }
-
-      const ok = configureFirebase(parsed);
-      if (ok) {
-        setFbStatusMsg('Firebase Cloud Database connected successfully!');
-      }
-    } catch (err) {
-      setFbStatusMsg('Invalid JSON format. Please paste valid Firebase config JSON.');
+    setCredBusy(true);
+    const result = await updatePassword(credForm.currentPassword, credForm.newPassword);
+    setCredBusy(false);
+    if (result.success) {
+      setCredMsg({ text: 'Admin password updated successfully!', type: 'success' });
+      showToast('Admin password updated successfully!');
+      setCredForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } else {
+      setCredMsg({ text: result.error, type: 'error' });
     }
   };
 
@@ -126,36 +100,47 @@ const Settings = () => {
           </div>
 
           <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: 1.5 }}>
-            Because the Admin Panel and your Main Website run on different domains, browsers isolate local data.
-            Connecting a free <strong>Firebase Firestore</strong> database allows every product change you make here to
-            instantly sync to your live website for all visitors in real-time.
+            Every product you add, edit, or delete here is published to <strong>Firebase Firestore</strong> and
+            appears on the live website for all visitors in real time.
           </p>
 
-          {fbStatusMsg && (
+          {cloudConnected ? (
             <div style={{
-              background: fbStatusMsg.includes('success') ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-              border: `1px solid ${fbStatusMsg.includes('success') ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
-              color: fbStatusMsg.includes('success') ? '#6ee7b7' : '#fca5a5',
+              background: 'rgba(16, 185, 129, 0.1)',
+              border: '1px solid rgba(16, 185, 129, 0.35)',
+              color: '#a7f3d0',
+              padding: '0.75rem 1rem',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '0.85rem',
+              marginBottom: '1rem',
+              lineHeight: 1.6
+            }}>
+              Project: <code>{firebaseProjectId}</code><br />
+              Signed in as: <code>{adminId}</code>
+            </div>
+          ) : (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.12)',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              color: '#fca5a5',
               padding: '0.75rem 1rem',
               borderRadius: 'var(--radius-md)',
               fontSize: '0.85rem',
               marginBottom: '1rem'
             }}>
-              {fbStatusMsg}
+              Firebase is not configured. Add the <code>VITE_FIREBASE_*</code> values to <code>.env</code> (and to your
+              hosting provider's environment variables) for <strong>both</strong> the admin panel and the website.
             </div>
           )}
 
           <div style={{ marginBottom: '1.25rem' }}>
-            <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Firebase Configuration (Paste JSON from Firebase Console)</span>
-              <button
-                type="button"
-                onClick={() => setShowGuide(!showGuide)}
-                style={{ background: 'none', border: 'none', color: '#60a5fa', cursor: 'pointer', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-              >
-                <HelpCircle size={13} /> {showGuide ? 'Hide instructions' : 'How to get free Firebase config (1 min)'}
-              </button>
-            </label>
+            <button
+              type="button"
+              onClick={() => setShowGuide(!showGuide)}
+              style={{ background: 'none', border: 'none', color: '#60a5fa', cursor: 'pointer', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.25rem', padding: 0 }}
+            >
+              <HelpCircle size={13} /> {showGuide ? 'Hide instructions' : 'How the connection works'}
+            </button>
 
             {showGuide && (
               <div style={{
@@ -165,42 +150,24 @@ const Settings = () => {
                 padding: '1rem',
                 fontSize: '0.82rem',
                 color: '#cbd5e1',
-                marginBottom: '1rem',
+                marginTop: '0.75rem',
                 lineHeight: 1.6
               }}>
-                <div style={{ fontWeight: 700, color: '#93c5fd', marginBottom: '0.5rem' }}>Quick 60-Second Setup (100% Free Forever):</div>
                 <ol style={{ paddingLeft: '1.2rem', margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                  <li>Go to <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" style={{ color: '#60a5fa', textDecoration: 'underline' }}>console.firebase.google.com <ExternalLink size={12} style={{ display: 'inline' }} /></a> and click <strong>Create a project</strong>.</li>
-                  <li>In your project home, click the Web icon <code>&lt;/&gt;</code> to register app and copy the <code>firebaseConfig</code> object.</li>
-                  <li>In the left sidebar, click <strong>Build &gt; Firestore Database</strong> &gt; <strong>Create database</strong> &gt; choose <strong>Start in test mode</strong> &gt; Enable.</li>
-                  <li>Paste the configuration JSON below and click <strong>Save &amp; Connect</strong>!</li>
+                  <li>The admin panel and the website read the same Firebase project from their <code>VITE_FIREBASE_*</code> environment variables.</li>
+                  <li>Products are stored in Firestore at <code>sp_catalog/&#123;vertical&#125;/items</code>. Anyone can read them, but only the admin email can write them (enforced by <code>firestore.rules</code>).</li>
+                  <li>Use the button below once to publish your full catalog. After that, every change syncs automatically.</li>
+                  <li>Manage the admin account in <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" style={{ color: '#60a5fa', textDecoration: 'underline' }}>Firebase Console <ExternalLink size={12} style={{ display: 'inline' }} /></a> under Authentication.</li>
                 </ol>
               </div>
             )}
-
-            <textarea
-              className="form-textarea"
-              rows={6}
-              value={fbJson}
-              onChange={e => { setFbJson(e.target.value); setFbStatusMsg(''); }}
-              placeholder={`{\n  "apiKey": "AIzaSy...",\n  "authDomain": "shree-pratham.firebaseapp.com",\n  "projectId": "shree-pratham",\n  "storageBucket": "shree-pratham.appspot.com",\n  "messagingSenderId": "...",\n  "appId": "..."\n}`}
-              style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}
-            />
           </div>
 
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              onClick={handleSaveFirebase}
-              className="btn-primary"
-              style={{ padding: '0.65rem 1.25rem', fontSize: '0.86rem' }}
-            >
-              <CloudLightning size={16} /> Save &amp; Connect Cloud Database
-            </button>
-
             {cloudConnected && (
               <button
                 type="button"
+                id="sync-all-products"
                 onClick={handlePushAll}
                 disabled={isSyncing}
                 className="btn-gold"
@@ -216,10 +183,10 @@ const Settings = () => {
         <div className="glass-card" style={{ padding: '1.5rem', border: '1px solid rgba(16, 185, 129, 0.4)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
             <Lock size={20} color="var(--accent-emerald-light)" />
-            <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Admin Login ID &amp; Password</h3>
+            <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Change Admin Password</h3>
           </div>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-            Update the ID and password used to sign in to this Admin Control Center.
+            Signed in as <strong>{adminId}</strong>. To change the admin email or add another admin, use Firebase Console → Authentication.
           </p>
 
           {credMsg.text && (
@@ -242,19 +209,24 @@ const Settings = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: '1rem' }}>
             <div>
-              <label className="form-label">Admin Login ID</label>
+              <label className="form-label">Current Password</label>
               <input
                 className="form-input"
-                value={credForm.loginId}
-                onChange={e => { setCredForm({ ...credForm, loginId: e.target.value }); setCredMsg({ text: '', type: '' }); }}
-                placeholder="e.g. admin or director"
+                id="admin-current-password"
+                type="password"
+                autoComplete="current-password"
+                value={credForm.currentPassword}
+                onChange={e => { setCredForm({ ...credForm, currentPassword: e.target.value }); setCredMsg({ text: '', type: '' }); }}
+                placeholder="••••••••"
               />
             </div>
             <div>
               <label className="form-label">New Password</label>
               <input
                 className="form-input"
+                id="admin-new-password"
                 type="password"
+                autoComplete="new-password"
                 value={credForm.newPassword}
                 onChange={e => { setCredForm({ ...credForm, newPassword: e.target.value }); setCredMsg({ text: '', type: '' }); }}
                 placeholder="••••••••"
@@ -264,7 +236,9 @@ const Settings = () => {
               <label className="form-label">Confirm Password</label>
               <input
                 className="form-input"
+                id="admin-confirm-password"
                 type="password"
+                autoComplete="new-password"
                 value={credForm.confirmPassword}
                 onChange={e => { setCredForm({ ...credForm, confirmPassword: e.target.value }); setCredMsg({ text: '', type: '' }); }}
                 placeholder="••••••••"
@@ -274,11 +248,13 @@ const Settings = () => {
 
           <button
             type="button"
+            id="admin-update-password"
             onClick={handleUpdateCreds}
+            disabled={credBusy}
             className="btn-primary"
             style={{ marginTop: '1.25rem', padding: '0.6rem 1.2rem', fontSize: '0.85rem' }}
           >
-            Update Login Credentials
+            {credBusy ? 'Updating...' : 'Update Password'}
           </button>
         </div>
 

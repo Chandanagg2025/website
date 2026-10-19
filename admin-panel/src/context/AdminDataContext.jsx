@@ -1,27 +1,36 @@
-import { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback, useRef } from 'react';
 import {
   isFirebaseConfigured,
   syncCatalogToCloud,
-  subscribeToCatalog,
-  saveFirebaseConfig,
-  reinitDb
+  saveProductToCloud,
+  deleteProductFromCloud,
+  subscribeToCatalog
 } from '../services/firebase';
 import { catalogSync } from '../services/catalogSync';
+
+const describeCloudError = (err) => {
+  if (err?.code === 'permission-denied') {
+    return 'permission denied. Check Firestore rules and that you are signed in with the admin email.';
+  }
+  if (err?.code === 'unavailable') return 'network unavailable. Changes will not reach the website until you retry.';
+  return err?.message || 'unknown error';
+};
 
 const AdminDataContext = createContext();
 
 // Seed products across all verticals with complete schema
 const seedGifts = [
-  { id: 'custom-mug', name: 'Personalized Ceramic & Magic Photo Mug', category: 'Personalized Studio', price: 349, originalPrice: 599, stock: 150, image: '/images/custom_mug.jpg', rating: 4.9, reviews: 420, inStock: true, sku: 'SP-CST-MUG', description: 'High-definition edge-to-edge sublimation print with gloss ceramic finish. Choose from Classic White or Heat-Sensitive Magic Color-Reveal. Microwave & dishwasher safe.', isPersonalizable: true, tags: ['Personalized Studio', 'Best Seller'] },
-  { id: 'custom-tshirt', name: 'Custom Printed Bio-Wash Cotton T-Shirt', category: 'Personalized Studio', price: 499, originalPrice: 899, stock: 200, image: '/images/custom_tshirt.jpg', rating: 4.8, reviews: 380, inStock: true, sku: 'SP-CST-TSHIRT', description: '100% super-combed 180 GSM bio-washed breathable cotton. Direct-to-Film (DTF) vivid printing for your photos, custom artwork, corporate logo, or slogan.', isPersonalizable: true, tags: ['Personalized Studio', 'Apparel'] },
-  { id: 'custom-pillow', name: 'Personalized Velvet & Sequin Photo Pillow', category: 'Personalized Studio', price: 599, originalPrice: 999, stock: 120, image: '/images/custom_pillow.jpg', rating: 4.9, reviews: 295, inStock: true, sku: 'SP-CST-PILLOW', description: 'Ultra-plush microfiber filled cushion with vibrant fade-resistant photo printing. Choose between Smooth Satin, Magic Two-Way Reversible Sequin, or Velvet Heart.', isPersonalizable: true, tags: ['Personalized Studio', 'Home Decor'] },
-  { id: 'custom-keychain', name: 'Custom Engraved Metallic & Wooden Keychains', category: 'Personalized Studio', price: 199, originalPrice: 399, stock: 300, image: '/images/custom_keychain.jpg', rating: 4.9, reviews: 510, inStock: true, sku: 'SP-CST-KEYCHAIN', description: 'Precision fiber laser engraved metallic bar, wooden keepsake, or acrylic photo keychain with your name, anniversary date, or vehicle registration plate.', isPersonalizable: true, tags: ['Personalized Studio', 'Accessories'] },
-  { id: 'custom-god-dress', name: 'Handcrafted Designer Deity Poshak & God Dresses', category: 'Personalized Studio', price: 449, originalPrice: 799, stock: 180, image: '/images/god_dress_poshak.jpg', rating: 5.0, reviews: 340, inStock: true, sku: 'SP-CST-GODDRESS', description: 'Exquisite handcrafted deity poshak for Laddu Gopal Ji, Radha Krishna, Mata Rani, and Temple Vigrahas. Tailored in pure silk, heavy zari borders, and gemstone work with custom deity size selection.', isPersonalizable: true, tags: ['Personalized Studio', 'Devotional', 'Handmade'] },
+  { id: 'custom-mug', name: 'Personalized Ceramic & Magic Photo Mug', category: 'Personalized Studio', price: 349, originalPrice: 599, stock: 150, image: '/images/custom_mug.jpg', rating: 4.9, reviews: 420, inStock: true, sku: 'SP-CST-MUG', customizationType: 'mug', description: 'High-definition edge-to-edge sublimation print with gloss ceramic finish. Choose from Classic White or Heat-Sensitive Magic Color-Reveal. Microwave & dishwasher safe.', isPersonalizable: true, tags: ['Personalized Studio', 'Best Seller'] },
+  { id: 'custom-tshirt', name: 'Custom Printed Bio-Wash Cotton T-Shirt', category: 'Personalized Studio', price: 499, originalPrice: 899, stock: 200, image: '/images/custom_tshirt.jpg', rating: 4.8, reviews: 380, inStock: true, sku: 'SP-CST-TSHIRT', customizationType: 'tshirt', description: '100% super-combed 180 GSM bio-washed breathable cotton. Direct-to-Film (DTF) vivid printing for your photos, custom artwork, corporate logo, or slogan.', isPersonalizable: true, tags: ['Personalized Studio', 'Apparel'] },
+  { id: 'custom-pillow', name: 'Personalized Velvet & Sequin Photo Pillow', category: 'Personalized Studio', price: 599, originalPrice: 999, stock: 120, image: '/images/custom_pillow.jpg', rating: 4.9, reviews: 295, inStock: true, sku: 'SP-CST-PILLOW', customizationType: 'pillow', description: 'Ultra-plush microfiber filled cushion with vibrant fade-resistant photo printing. Choose between Smooth Satin, Magic Two-Way Reversible Sequin, or Velvet Heart.', isPersonalizable: true, tags: ['Personalized Studio', 'Home Decor'] },
+  { id: 'custom-keychain', name: 'Custom Engraved Metallic & Wooden Keychains', category: 'Personalized Studio', price: 199, originalPrice: 399, stock: 300, image: '/images/custom_keychain.jpg', rating: 4.9, reviews: 510, inStock: true, sku: 'SP-CST-KEYCHAIN', customizationType: 'keychain', description: 'Precision fiber laser engraved metallic bar, wooden keepsake, or acrylic photo keychain with your name, anniversary date, or vehicle registration plate.', isPersonalizable: true, tags: ['Personalized Studio', 'Accessories'] },
+  { id: 'custom-god-dress', name: 'Handcrafted Designer Deity Poshak & God Dresses', category: 'Personalized Studio', price: 449, originalPrice: 799, stock: 180, image: '/images/god_dress_poshak.jpg', rating: 5.0, reviews: 340, inStock: true, sku: 'SP-CST-GODDRESS', customizationType: 'god-dress', description: 'Exquisite handcrafted deity poshak for Laddu Gopal Ji, Radha Krishna, Mata Rani, and Temple Vigrahas. Tailored in pure silk, heavy zari borders, and gemstone work with custom deity size selection.', isPersonalizable: true, tags: ['Personalized Studio', 'Devotional', 'Handmade'] },
   { id: 'gift-1', name: 'Executive Gold Crest Gift Set', category: 'Corporate', price: 1899, originalPrice: 2499, stock: 45, image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=800&auto=format&fit=crop', rating: 4.9, reviews: 128, inStock: true, sku: 'SP-GFT-001', description: 'Bespoke corporate gifting box featuring 24K gold foil pen, premium leatherette notebook, customized metallic keychain & insulated cardholder.', isPersonalizable: false, tags: ['Best Seller', 'Corporate'] },
   { id: 'gift-2', name: 'Royal Heritage Wedding Sweet Box', category: 'Wedding', price: 2450, originalPrice: 3200, stock: 28, image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=800&auto=format&fit=crop', rating: 5.0, reviews: 94, inStock: true, sku: 'SP-GFT-002', description: 'Handcrafted velvet keepsake hamper filled with organic dry fruits, saffron-infused treats, scented brass diya, and gold-foil congratulations card.', isPersonalizable: false, tags: ['Luxury', 'Wedding'] },
   { id: 'gift-3', name: 'Celebration Confetti Birthday Hamper', category: 'Birthday', price: 1299, originalPrice: 1699, stock: 62, image: 'https://images.unsplash.com/photo-1577083552431-6e5fd01aa342?q=80&w=800&auto=format&fit=crop', rating: 4.8, reviews: 215, inStock: true, sku: 'SP-GFT-003', description: 'Vibrant celebratory box packed with artisanal chocolates, customized thermal tumbler, personalized birthday plaque, and party sparklers.', isPersonalizable: false, tags: ['Trending', 'Birthday'] },
   { id: 'gift-4', name: 'Divya Festive Brass Pooja Collection', category: 'Festive', price: 1999, originalPrice: 2799, stock: 15, image: 'https://images.unsplash.com/photo-1607344645866-009c320c5ab8?q=80&w=800&auto=format&fit=crop', rating: 4.9, reviews: 310, inStock: true, sku: 'SP-GFT-004', description: 'Pure bell-metal brass Aarti Thali set with engraved lotus motifs, natural dhoop cones, silver coin and festive velvet pouch.', isPersonalizable: false, tags: ['Festive Special', 'Handmade'] },
   { id: 'gift-5', name: 'Artisan Gourmet Chocolate Chest', category: 'Birthday', price: 1150, originalPrice: 1450, stock: 88, image: 'https://images.unsplash.com/photo-1548848221-0c2e497ed557?q=80&w=800&auto=format&fit=crop', rating: 4.7, reviews: 82, inStock: true, sku: 'SP-GFT-005', description: 'Assorted Belgian dark, hazelnut praline, and berry infused artisanal chocolates in a reusable mahogany-finished wooden case.', isPersonalizable: false, tags: ['Gourmet', 'Birthday'] },
+  { id: 'gift-6', name: 'Eco-Elite Sustainable Corporate Kit', category: 'Corporate', price: 999, originalPrice: 1350, stock: 50, image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?q=80&w=800&auto=format&fit=crop', rating: 4.8, reviews: 140, inStock: true, sku: 'SP-GFT-006', description: 'Plantable seed pen, bamboo flask with digital temperature gauge, cork notebook, and unbleached cotton tote bag.', isPersonalizable: false, tags: ['Eco-Friendly', 'Corporate'] },
 ];
 
 const seedWater = [
@@ -143,22 +152,22 @@ export const AdminDataProvider = ({ children }) => {
   });
 
   // Cloud status
-  const [cloudConnected, setCloudConnected] = useState(isFirebaseConfigured());
+  const cloudConnected = isFirebaseConfigured();
+  // Per-vertical: true = cloud catalog is empty, false = has products, null = not loaded yet
+  const cloudEmptyRef = useRef({ gifts: null, water: null, appliances: null });
 
   // Listen to Firestore real-time if configured
   useEffect(() => {
     if (!isFirebaseConfigured()) return;
-    setCloudConnected(true);
 
-    const unsubGifts = subscribeToCatalog('gifts', (cloudData) => {
-      if (Array.isArray(cloudData) && cloudData.length > 0) setGifts(cloudData);
+    const listen = (vertical, setter) => subscribeToCatalog(vertical, (cloudData) => {
+      cloudEmptyRef.current[vertical] = cloudData.length === 0;
+      if (cloudData.length > 0) setter(cloudData);
     });
-    const unsubWater = subscribeToCatalog('water', (cloudData) => {
-      if (Array.isArray(cloudData) && cloudData.length > 0) setWater(cloudData);
-    });
-    const unsubApps = subscribeToCatalog('appliances', (cloudData) => {
-      if (Array.isArray(cloudData) && cloudData.length > 0) setAppliances(cloudData);
-    });
+
+    const unsubGifts = listen('gifts', setGifts);
+    const unsubWater = listen('water', setWater);
+    const unsubApps = listen('appliances', setAppliances);
 
     return () => {
       unsubGifts();
@@ -265,21 +274,28 @@ export const AdminDataProvider = ({ children }) => {
   useEffect(() => { localStorage.setItem('sp_quotes', JSON.stringify(bulkQuotes)); localStorage.setItem('admin_quotes', JSON.stringify(bulkQuotes)); }, [bulkQuotes]);
   useEffect(() => { localStorage.setItem('admin_settings', JSON.stringify(settings)); }, [settings]);
 
-  // Sync to cloud helper
-  const syncToCloud = useCallback(async (vertical, newProducts) => {
-    if (isFirebaseConfigured()) {
-      try {
-        await syncCatalogToCloud(vertical, newProducts);
-      } catch (err) {
-        console.warn(`Could not sync ${vertical} to cloud:`, err);
+  // Publish a change to the live website (Firestore).
+  // If the cloud catalog for this vertical is still empty, publish the full list instead of
+  // a single item so the website never ends up showing a partial catalog.
+  const publishToCloud = useCallback(async (vertical, fullList, singleOp) => {
+    if (!isFirebaseConfigured()) return;
+    try {
+      if (cloudEmptyRef.current[vertical] === true) {
+        await syncCatalogToCloud(vertical, fullList);
+        cloudEmptyRef.current[vertical] = false;
+      } else {
+        await singleOp();
       }
+    } catch (err) {
+      console.error(`Could not publish ${vertical} to cloud:`, err);
+      showToast(`Saved in admin, but NOT published to website: ${describeCloudError(err)}`, 'error');
     }
-  }, []);
+  }, [showToast]);
 
   // Force sync all to cloud
   const pushAllToCloud = async () => {
     if (!isFirebaseConfigured()) {
-      showToast('Firebase not configured. Setup credentials in Settings.', 'error');
+      showToast('Firebase not configured. Add VITE_FIREBASE_* values to .env.', 'error');
       return false;
     }
     try {
@@ -287,58 +303,43 @@ export const AdminDataProvider = ({ children }) => {
       await syncCatalogToCloud('gifts', gifts);
       await syncCatalogToCloud('water', water);
       await syncCatalogToCloud('appliances', appliances);
+      cloudEmptyRef.current = { gifts: false, water: false, appliances: false };
       showToast('All products successfully synced to cloud and live on website!', 'success');
       return true;
     } catch (e) {
-      showToast('Sync failed: ' + (e.message || 'Check connection / Firestore rules'), 'error');
+      showToast('Sync failed: ' + describeCloudError(e), 'error');
       return false;
     }
   };
 
-  // Connect Firebase from Settings
-  const configureFirebase = (configObj) => {
-    const ok = saveFirebaseConfig(configObj);
-    if (ok) {
-      reinitDb();
-      setCloudConnected(true);
-      showToast('Firebase Cloud Database connected successfully!');
-      return true;
-    }
-    showToast('Invalid Firebase configuration object.', 'error');
-    return false;
+  // Product operations
+  const productLists = { gifts, water, appliances };
+  const productSetters = { gifts: setGifts, water: setWater, appliances: setAppliances };
+  const storageKeys = { gifts: 'sp_gift_products', water: 'sp_water_products', appliances: 'sp_appliances' };
+
+  const applyLocal = (vertical, updated) => {
+    productSetters[vertical](updated);
+    localStorage.setItem(storageKeys[vertical], JSON.stringify(updated));
+    catalogSync.broadcast('CATALOG_UPDATE', { vertical, data: updated });
   };
 
-  // Product operations
   const addProduct = (vertical, product) => {
+    if (!productSetters[vertical]) return;
     const newProduct = {
       ...product,
       id: product.id || `${vertical}-${Date.now()}`,
+      position: -Date.now(), // newest first
       inStock: product.inStock !== undefined ? product.inStock : ((product.stock || 0) > 0)
     };
-    if (vertical === 'gifts') {
-      const updated = [newProduct, ...gifts];
-      setGifts(updated);
-      localStorage.setItem('sp_gift_products', JSON.stringify(updated));
-      catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'gifts', data: updated });
-      syncToCloud('gifts', updated);
-    } else if (vertical === 'water') {
-      const updated = [newProduct, ...water];
-      setWater(updated);
-      localStorage.setItem('sp_water_products', JSON.stringify(updated));
-      catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'water', data: updated });
-      syncToCloud('water', updated);
-    } else if (vertical === 'appliances') {
-      const updated = [newProduct, ...appliances];
-      setAppliances(updated);
-      localStorage.setItem('sp_appliances', JSON.stringify(updated));
-      catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'appliances', data: updated });
-      syncToCloud('appliances', updated);
-    }
+    const updated = [newProduct, ...productLists[vertical]];
+    applyLocal(vertical, updated);
+    publishToCloud(vertical, updated, () => saveProductToCloud(vertical, newProduct));
     showToast(`Product "${product.name}" published to storefront!`);
   };
 
   const updateProduct = (vertical, id, updates) => {
-    const updater = prev => prev.map(p => {
+    if (!productSetters[vertical]) return;
+    const updated = productLists[vertical].map(p => {
       if (p.id !== id) return p;
       const stockVal = updates.stock !== undefined ? parseInt(updates.stock) : (p.stock || 0);
       const inStockVal = updates.inStock !== undefined ? updates.inStock : (stockVal > 0);
@@ -349,50 +350,21 @@ export const AdminDataProvider = ({ children }) => {
         inStock: inStockVal
       };
     });
-
-    if (vertical === 'gifts') {
-      const updated = updater(gifts);
-      setGifts(updated);
-      localStorage.setItem('sp_gift_products', JSON.stringify(updated));
-      catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'gifts', data: updated });
-      syncToCloud('gifts', updated);
-    } else if (vertical === 'water') {
-      const updated = updater(water);
-      setWater(updated);
-      localStorage.setItem('sp_water_products', JSON.stringify(updated));
-      catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'water', data: updated });
-      syncToCloud('water', updated);
-    } else if (vertical === 'appliances') {
-      const updated = updater(appliances);
-      setAppliances(updated);
-      localStorage.setItem('sp_appliances', JSON.stringify(updated));
-      catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'appliances', data: updated });
-      syncToCloud('appliances', updated);
-    }
+    const index = updated.findIndex(p => p.id === id);
+    if (index === -1) return;
+    const item = updated[index];
+    applyLocal(vertical, updated);
+    publishToCloud(vertical, updated, () =>
+      saveProductToCloud(vertical, { ...item, position: item.position ?? index })
+    );
     showToast('Product updated on live storefront!');
   };
 
   const deleteProduct = (vertical, id) => {
-    const filter = prev => prev.filter(p => p.id !== id);
-    if (vertical === 'gifts') {
-      const updated = filter(gifts);
-      setGifts(updated);
-      localStorage.setItem('sp_gift_products', JSON.stringify(updated));
-      catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'gifts', data: updated });
-      syncToCloud('gifts', updated);
-    } else if (vertical === 'water') {
-      const updated = filter(water);
-      setWater(updated);
-      localStorage.setItem('sp_water_products', JSON.stringify(updated));
-      catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'water', data: updated });
-      syncToCloud('water', updated);
-    } else if (vertical === 'appliances') {
-      const updated = filter(appliances);
-      setAppliances(updated);
-      localStorage.setItem('sp_appliances', JSON.stringify(updated));
-      catalogSync.broadcast('CATALOG_UPDATE', { vertical: 'appliances', data: updated });
-      syncToCloud('appliances', updated);
-    }
+    if (!productSetters[vertical]) return;
+    const updated = productLists[vertical].filter(p => p.id !== id);
+    applyLocal(vertical, updated);
+    publishToCloud(vertical, updated, () => deleteProductFromCloud(vertical, id));
     showToast('Product deleted from catalog!', 'info');
   };
 
@@ -500,8 +472,7 @@ export const AdminDataProvider = ({ children }) => {
       toast, showToast,
       getKPIs,
       cloudConnected,
-      pushAllToCloud,
-      configureFirebase
+      pushAllToCloud
     }}>
       {children}
     </AdminDataContext.Provider>

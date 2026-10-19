@@ -1,0 +1,43 @@
+rules_version = '2';
+
+// Shree Pratham - Firestore Security Rules
+// Paste into Firebase Console -> Firestore Database -> Rules, then click Publish.
+// Replace REPLACE_WITH_ADMIN_EMAIL with the email of the admin user you created in
+// Firebase Console -> Authentication -> Users (must be lowercase).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email in ['REPLACE_WITH_ADMIN_EMAIL'];
+    }
+
+    // Product catalog: public read (website visitors), admin-only write (admin panel)
+    match /sp_catalog/{vertical} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      match /items/{productId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
+
+    // Orders & inquiries: website visitors can create, only admin can read/modify
+    match /sp_orders/{orderId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /sp_queries/{queryId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Everything else is locked down
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
