@@ -422,6 +422,29 @@ const Layout = () => {
                   <User size={16} /> Sign In / Register
                 </Link>
               )}
+
+              {/* Admin Panel Quick Access in Mobile Drawer */}
+              <Link
+                to="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  padding: '0.75rem',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'rgba(16, 185, 129, 0.12)',
+                  border: '1px solid rgba(16, 185, 129, 0.4)',
+                  color: '#34d399',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  textDecoration: 'none',
+                  marginTop: '0.25rem'
+                }}
+              >
+                <ShieldCheck size={16} /> Admin Panel (Manage Store)
+              </Link>
             </div>
           </div>
         )}
@@ -539,6 +562,39 @@ const Layout = () => {
                 <li><Link to="/it-services" style={{ color: 'inherit' }}>24/7 Managed NOC Support</Link></li>
               </ul>
             </div>
+
+            {/* Admin & Operations */}
+            <div>
+              <h4 style={{ fontSize: '1rem', color: '#34d399', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                <ShieldCheck size={16} color="#10b981" /> Store Management
+              </h4>
+              <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
+                <li>
+                  <Link
+                    to="/admin"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.45rem',
+                      color: '#34d399',
+                      fontWeight: 700,
+                      background: 'rgba(16, 185, 129, 0.12)',
+                      border: '1px solid rgba(16, 185, 129, 0.4)',
+                      padding: '0.45rem 0.85rem',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      boxShadow: '0 2px 8px rgba(16, 185, 129, 0.15)'
+                    }}
+                  >
+                    <ShieldCheck size={15} /> Admin Panel
+                  </Link>
+                </li>
+                <li><Link to="/admin/products" style={{ color: 'inherit' }}>Manage Products & Pricing</Link></li>
+                <li><Link to="/admin/stock" style={{ color: 'inherit' }}>Live Stock & Inventory</Link></li>
+                <li><Link to="/admin/orders" style={{ color: 'inherit' }}>Customer Orders & Dispatch</Link></li>
+                <li><Link to="/admin/settings" style={{ color: 'inherit' }}>Store & System Settings</Link></li>
+              </ul>
+            </div>
           </div>
 
           {/* Bottom Bar */}
@@ -557,7 +613,7 @@ const Layout = () => {
               © 2026 SHREE PRATHAM Group. All rights reserved. Pan-India Operations.
             </div>
 
-            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center', flexWrap: 'wrap' }}>
               <button
                 onClick={() => setContactModalOpen(true)}
                 style={{ background: 'transparent', border: 'none', color: 'var(--accent-gold)', cursor: 'pointer', fontSize: 'inherit', fontWeight: 600 }}
@@ -567,7 +623,25 @@ const Layout = () => {
               <Link to="/cart" style={{ color: 'inherit' }}>Shopping Cart</Link>
               <Link to="/account" style={{ color: 'inherit' }}>Order Tracking</Link>
               <Link to="/login" style={{ color: 'inherit' }}>Customer Login</Link>
-              <Link to="/admin" style={{ color: 'var(--accent-emerald-light)', fontWeight: 600 }}>Admin Console</Link>
+              <Link
+                to="/admin"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  padding: '0.35rem 0.8rem',
+                  borderRadius: '6px',
+                  background: 'rgba(16, 185, 129, 0.12)',
+                  border: '1px solid rgba(16, 185, 129, 0.35)',
+                  color: '#34d399',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
+                  textDecoration: 'none'
+                }}
+                title="Admin Control Center"
+              >
+                <ShieldCheck size={14} /> Admin Panel
+              </Link>
             </div>
           </div>
         </div>

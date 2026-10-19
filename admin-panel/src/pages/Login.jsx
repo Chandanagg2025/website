@@ -78,7 +78,7 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div>
-            <label className="form-label">Admin ID or Email</label>
+            <label className="form-label">Admin Username</label>
             <div style={{ position: 'relative' }}>
               <User
                 size={16}
@@ -91,7 +91,7 @@ const Login = () => {
                 autoComplete="username"
                 required
                 autoFocus
-                placeholder="admin or admin@shreepratham.com"
+                placeholder="shreeprathamadmin"
                 className="form-input"
                 value={loginId}
                 onChange={e => { setLoginId(e.target.value); setError(''); }}
@@ -113,7 +113,7 @@ const Login = () => {
                 id="admin-login-password"
                 autoComplete="current-password"
                 required
-                placeholder="Enter Admin Password"
+                placeholder="••••••••••••"
                 className="form-input"
                 value={password}
                 onChange={e => { setPassword(e.target.value); setError(''); }}

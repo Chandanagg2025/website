@@ -170,13 +170,16 @@ export const subscribeToCatalog = (vertical, onData, onError) => {
 // ---------------------------------------------------------------------------
 export const adminSignIn = async (emailOrId, password) => {
   const supabase = getSupabase();
-  const envPass = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
-  const cleanInput = (emailOrId || '').trim();
+  const envPass = import.meta.env.VITE_ADMIN_PASSWORD || 'shree.pratham25';
+  const cleanInput = (emailOrId || '').trim().toLowerCase();
   const cleanPass = (password || '').trim();
 
-  // 1. Direct admin password check (Fastest & simplest)
-  if (cleanPass === envPass || cleanPass === 'shree.pratham25') {
-    return { user: { email: cleanInput.includes('@') ? cleanInput : 'admin@shreepratham.com' } };
+  // 1. Direct admin credential check (User: shreeprathamadmin, Pass: shree.pratham25)
+  const idMatch = cleanInput === 'shreeprathamadmin' || cleanInput === 'admin' || cleanInput === 'admin@shreepratham.com';
+  const passMatch = cleanPass === 'shree.pratham25' || cleanPass === envPass;
+
+  if (idMatch && passMatch) {
+    return { user: { email: 'shreeprathamadmin' } };
   }
 
   // 2. Try Supabase Auth if input looks like an email
@@ -189,7 +192,7 @@ export const adminSignIn = async (emailOrId, password) => {
     return data;
   }
 
-  throw new Error('Invalid Admin ID or Password.');
+  throw new Error('Invalid Admin Username or Password.');
 };
 
 export const adminSignOut = async () => {

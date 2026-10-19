@@ -14,7 +14,7 @@ const Login = () => {
     e.preventDefault();
     const success = login(loginId, password);
     if (!success) {
-      setError('Invalid Admin Login ID or Password. Try "admin" and "admin123" or "shree.pratham25".');
+      setError('Invalid Admin Username or Password. Please check your credentials.');
     }
   };
 
@@ -76,7 +76,7 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div>
-            <label className="form-label">Admin Login ID</label>
+            <label className="form-label">Admin Username</label>
             <div style={{ position: 'relative' }}>
               <User
                 size={16}
@@ -85,9 +85,11 @@ const Login = () => {
               />
               <input
                 type="text"
+                id="admin-username"
+                autoComplete="username"
                 required
                 autoFocus
-                placeholder="admin or admin@shreepratham.com"
+                placeholder="shreeprathamadmin"
                 className="form-input"
                 value={loginId}
                 onChange={e => { setLoginId(e.target.value); setError(''); }}
@@ -106,8 +108,10 @@ const Login = () => {
               />
               <input
                 type={showPassword ? 'text' : 'password'}
+                id="admin-password"
+                autoComplete="current-password"
                 required
-                placeholder="admin123 or shree.pratham25"
+                placeholder="••••••••••••"
                 className="form-input"
                 value={password}
                 onChange={e => { setPassword(e.target.value); setError(''); }}

@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const AdminAuthContext = createContext();
 
-const DEFAULT_ADMIN_ID = 'admin';
+const DEFAULT_ADMIN_ID = 'shreeprathamadmin';
 const DEFAULT_ADMIN_PASSWORD = 'shree.pratham25';
 
 export const AdminAuthProvider = ({ children }) => {
@@ -45,9 +45,9 @@ export const AdminAuthProvider = ({ children }) => {
     const expectedId = (adminId || DEFAULT_ADMIN_ID).trim().toLowerCase();
     const expectedPass = (adminPassword || DEFAULT_ADMIN_PASSWORD).trim();
 
-    // Check against configured credentials or master defaults
-    const idValid = cleanId === expectedId || cleanId === 'admin' || cleanId === 'admin@shreepratham.com';
-    const passValid = cleanPass === expectedPass || cleanPass === 'admin' || cleanPass === 'admin123' || cleanPass === 'shree@admin' || cleanPass === 'shree.pratham25';
+    // Check credentials: User: shreeprathamadmin, Pass: shree.pratham25
+    const idValid = cleanId === expectedId || cleanId === 'shreeprathamadmin' || cleanId === 'admin';
+    const passValid = cleanPass === expectedPass || cleanPass === 'shree.pratham25';
 
     if (idValid && passValid) {
       setIsAdmin(true);
@@ -58,7 +58,7 @@ export const AdminAuthProvider = ({ children }) => {
 
   const updateCredentials = (newId, newPassword) => {
     if (!newId || !newPassword) return false;
-    const cleanId = newId.trim();
+    const cleanId = newId.trim().toLowerCase();
     const cleanPass = newPassword.trim();
     setAdminId(cleanId);
     setAdminPassword(cleanPass);
