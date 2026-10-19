@@ -78,7 +78,7 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div>
-            <label className="form-label">Admin Email</label>
+            <label className="form-label">Admin ID or Email</label>
             <div style={{ position: 'relative' }}>
               <User
                 size={16}
@@ -86,12 +86,12 @@ const Login = () => {
                 style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}
               />
               <input
-                type="email"
+                type="text"
                 id="admin-login-email"
                 autoComplete="username"
                 required
                 autoFocus
-                placeholder="admin@yourdomain.com"
+                placeholder="admin or admin@shreepratham.com"
                 className="form-input"
                 value={loginId}
                 onChange={e => { setLoginId(e.target.value); setError(''); }}

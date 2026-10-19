@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { useAdminData } from '../context/AdminDataContext';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { getFirebaseConfig } from '../services/firebase';
+import { getSupabaseConfig } from '../services/supabase';
 
 const Settings = () => {
   const {
@@ -24,7 +24,7 @@ const Settings = () => {
   const [credMsg, setCredMsg] = useState({ text: '', type: '' });
   const [credBusy, setCredBusy] = useState(false);
 
-  const firebaseProjectId = getFirebaseConfig()?.projectId || '';
+  const supabaseUrl = getSupabaseConfig()?.url || '';
   const [isSyncing, setIsSyncing] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
 
@@ -81,12 +81,12 @@ const Settings = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '750px' }}>
 
-        {/* 1. Firebase Live Cloud Sync */}
+        {/* 1. Supabase Live Cloud Sync */}
         <div className="glass-card" style={{ padding: '1.5rem', border: '1px solid rgba(16, 185, 129, 0.45)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Database size={22} color="var(--accent-emerald-light)" />
-              <h3 style={{ fontSize: '1.15rem', margin: 0 }}>Live Website Cloud Database (Firebase)</h3>
+              <h3 style={{ fontSize: '1.15rem', margin: 0 }}>Live Website Cloud Database (Supabase)</h3>
             </div>
             {cloudConnected ? (
               <span className="badge badge-green" style={{ padding: '0.3rem 0.8rem', fontSize: '0.78rem' }}>
@@ -100,7 +100,7 @@ const Settings = () => {
           </div>
 
           <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: 1.5 }}>
-            Every product you add, edit, or delete here is published to <strong>Firebase Firestore</strong> and
+            Every product you add, edit, or delete here is published to <strong>Supabase</strong> and
             appears on the live website for all visitors in real time.
           </p>
 
@@ -115,8 +115,8 @@ const Settings = () => {
               marginBottom: '1rem',
               lineHeight: 1.6
             }}>
-              Project: <code>{firebaseProjectId}</code><br />
-              Signed in as: <code>{adminId}</code>
+              Connected URL: <code>{supabaseUrl}</code><br />
+              Admin: <code>{adminId}</code>
             </div>
           ) : (
             <div style={{
@@ -128,8 +128,7 @@ const Settings = () => {
               fontSize: '0.85rem',
               marginBottom: '1rem'
             }}>
-              Firebase is not configured. Add the <code>VITE_FIREBASE_*</code> values to <code>.env</code> (and to your
-              hosting provider's environment variables) for <strong>both</strong> the admin panel and the website.
+              Supabase is not configured yet. Add <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to your <code>.env</code> file.
             </div>
           )}
 
@@ -139,7 +138,7 @@ const Settings = () => {
               onClick={() => setShowGuide(!showGuide)}
               style={{ background: 'none', border: 'none', color: '#60a5fa', cursor: 'pointer', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.25rem', padding: 0 }}
             >
-              <HelpCircle size={13} /> {showGuide ? 'Hide instructions' : 'How the connection works'}
+              <HelpCircle size={13} /> {showGuide ? 'Hide instructions' : 'How to set up Supabase (1 minute)'}
             </button>
 
             {showGuide && (
@@ -153,11 +152,26 @@ const Settings = () => {
                 marginTop: '0.75rem',
                 lineHeight: 1.6
               }}>
-                <ol style={{ paddingLeft: '1.2rem', margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                  <li>The admin panel and the website read the same Firebase project from their <code>VITE_FIREBASE_*</code> environment variables.</li>
-                  <li>Products are stored in Firestore at <code>sp_catalog/&#123;vertical&#125;/items</code>. Anyone can read them, but only the admin email can write them (enforced by <code>firestore.rules</code>).</li>
-                  <li>Use the button below once to publish your full catalog. After that, every change syncs automatically.</li>
-                  <li>Manage the admin account in <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" style={{ color: '#60a5fa', textDecoration: 'underline' }}>Firebase Console <ExternalLink size={12} style={{ display: 'inline' }} /></a> under Authentication.</li>
+                <ol style={{ paddingLeft: '1.2rem', margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <li>Go to <a href="https://supabase.com" target="_blank" rel="noreferrer" style={{ color: '#60a5fa', textDecoration: 'underline' }}>supabase.com <ExternalLink size={12} style={{ display: 'inline' }} /></a> and create a free project.</li>
+                  <li>Click <strong>SQL Editor</strong> on the left, paste the SQL below and click <strong>Run</strong>:
+                    <pre style={{ background: '#090d16', padding: '0.5rem', borderRadius: '6px', margin: '0.3rem 0', fontSize: '0.75rem', overflowX: 'auto' }}>
+{`create table if not exists public.products (
+  id text primary key,
+  vertical text not null,
+  name text,
+  price numeric,
+  in_stock boolean default true,
+  position bigint default 0,
+  payload jsonb not null,
+  updated_at timestamptz default now()
+);
+alter table public.products enable row level security;
+create policy "Allow all" on public.products for all using (true) with check (true);
+alter publication supabase_realtime add table public.products;`}
+                    </pre>
+                  </li>
+                  <li>Go to <strong>Project Settings</strong> &gt; <strong>API</strong> and copy the <strong>Project URL</strong> and <strong>anon public key</strong> into your <code>.env</code> file.</li>
                 </ol>
               </div>
             )}

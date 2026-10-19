@@ -1,19 +1,15 @@
 import { createContext, useState, useEffect, useContext, useCallback, useRef } from 'react';
 import {
-  isFirebaseConfigured,
+  isSupabaseConfigured,
   syncCatalogToCloud,
   saveProductToCloud,
   deleteProductFromCloud,
   subscribeToCatalog
-} from '../services/firebase';
+} from '../services/supabase';
 import { catalogSync } from '../services/catalogSync';
 
 const describeCloudError = (err) => {
-  if (err?.code === 'permission-denied') {
-    return 'permission denied. Check Firestore rules and that you are signed in with the admin email.';
-  }
-  if (err?.code === 'unavailable') return 'network unavailable. Changes will not reach the website until you retry.';
-  return err?.message || 'unknown error';
+  return err?.message || 'Check your Supabase URL, anon key, or internet connection.';
 };
 
 const AdminDataContext = createContext();
@@ -152,13 +148,13 @@ export const AdminDataProvider = ({ children }) => {
   });
 
   // Cloud status
-  const cloudConnected = isFirebaseConfigured();
+  const cloudConnected = isSupabaseConfigured();
   // Per-vertical: true = cloud catalog is empty, false = has products, null = not loaded yet
   const cloudEmptyRef = useRef({ gifts: null, water: null, appliances: null });
 
   // Listen to Firestore real-time if configured
   useEffect(() => {
-    if (!isFirebaseConfigured()) return;
+    if (!isSupabaseConfigured()) return;
 
     const listen = (vertical, setter) => subscribeToCatalog(vertical, (cloudData) => {
       cloudEmptyRef.current[vertical] = cloudData.length === 0;
@@ -278,7 +274,7 @@ export const AdminDataProvider = ({ children }) => {
   // If the cloud catalog for this vertical is still empty, publish the full list instead of
   // a single item so the website never ends up showing a partial catalog.
   const publishToCloud = useCallback(async (vertical, fullList, singleOp) => {
-    if (!isFirebaseConfigured()) return;
+    if (!isSupabaseConfigured()) return;
     try {
       if (cloudEmptyRef.current[vertical] === true) {
         await syncCatalogToCloud(vertical, fullList);
@@ -294,8 +290,8 @@ export const AdminDataProvider = ({ children }) => {
 
   // Force sync all to cloud
   const pushAllToCloud = async () => {
-    if (!isFirebaseConfigured()) {
-      showToast('Firebase not configured. Add VITE_FIREBASE_* values to .env.', 'error');
+    if (!isSupabaseConfigured()) {
+      showToast('Supabase not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env.', 'error');
       return false;
     }
     try {

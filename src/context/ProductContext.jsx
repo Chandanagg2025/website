@@ -24,6 +24,11 @@ import {
 } from '../services/shiprocketService';
 
 import {
+  isSupabaseConfigured,
+  subscribeToCatalog as subscribeToSupabaseCatalog,
+  sendOrderToCloud as sendOrderToSupabase
+} from '../services/supabase';
+import {
   isFirebaseConfigured,
   subscribeToCatalog,
   sendOrderToCloud,
@@ -166,40 +171,62 @@ export const ProductProvider = ({ children }) => {
     setToast(prev => ({ ...prev, visible: false }));
   };
 
-  // Real-time Cloud Catalog Sync from Firebase (Cross-Domain)
+  // Real-time Cloud Catalog Sync (Supabase / Firebase)
   // Products are published by the admin panel. Cloud values win, but fields the admin form
   // doesn't manage (e.g. customizationType, specs) are kept from the built-in catalog.
   useEffect(() => {
-    if (!isFirebaseConfigured()) return;
-
     const withBuiltInFields = (cloudItems, builtIn) => {
       const builtInById = new Map(builtIn.map(p => [p.id, p]));
       return cloudItems.map(p => ({ ...(builtInById.get(p.id) || {}), ...p }));
     };
 
-    const unsubGifts = subscribeToCatalog('gifts', (cloudGifts) => {
-      if (Array.isArray(cloudGifts) && cloudGifts.length > 0) {
-        setGiftProducts(withBuiltInFields(cloudGifts, initialGiftProducts));
-      }
-    });
+    if (isSupabaseConfigured()) {
+      const unsubGifts = subscribeToSupabaseCatalog('gifts', (cloudGifts) => {
+        if (Array.isArray(cloudGifts) && cloudGifts.length > 0) {
+          setGiftProducts(withBuiltInFields(cloudGifts, initialGiftProducts));
+        }
+      });
+      const unsubWater = subscribeToSupabaseCatalog('water', (cloudWater) => {
+        if (Array.isArray(cloudWater) && cloudWater.length > 0) {
+          setWaterProducts(withBuiltInFields(cloudWater, initialWaterProducts));
+        }
+      });
+      const unsubApps = subscribeToSupabaseCatalog('appliances', (cloudApps) => {
+        if (Array.isArray(cloudApps) && cloudApps.length > 0) {
+          setAppliances(withBuiltInFields(cloudApps, initialAppliances));
+        }
+      });
 
-    const unsubWater = subscribeToCatalog('water', (cloudWater) => {
-      if (Array.isArray(cloudWater) && cloudWater.length > 0) {
-        setWaterProducts(withBuiltInFields(cloudWater, initialWaterProducts));
-      }
-    });
+      return () => {
+        unsubGifts();
+        unsubWater();
+        unsubApps();
+      };
+    }
 
-    const unsubApps = subscribeToCatalog('appliances', (cloudApps) => {
-      if (Array.isArray(cloudApps) && cloudApps.length > 0) {
-        setAppliances(withBuiltInFields(cloudApps, initialAppliances));
-      }
-    });
+    if (isFirebaseConfigured()) {
+      const unsubGifts = subscribeToCatalog('gifts', (cloudGifts) => {
+        if (Array.isArray(cloudGifts) && cloudGifts.length > 0) {
+          setGiftProducts(withBuiltInFields(cloudGifts, initialGiftProducts));
+        }
+      });
+      const unsubWater = subscribeToCatalog('water', (cloudWater) => {
+        if (Array.isArray(cloudWater) && cloudWater.length > 0) {
+          setWaterProducts(withBuiltInFields(cloudWater, initialWaterProducts));
+        }
+      });
+      const unsubApps = subscribeToCatalog('appliances', (cloudApps) => {
+        if (Array.isArray(cloudApps) && cloudApps.length > 0) {
+          setAppliances(withBuiltInFields(cloudApps, initialAppliances));
+        }
+      });
 
-    return () => {
-      unsubGifts();
-      unsubWater();
-      unsubApps();
-    };
+      return () => {
+        unsubGifts();
+        unsubWater();
+        unsubApps();
+      };
+    }
   }, []);
 
   // Real-time catalog & orders sync via BroadcastChannel & Storage events
